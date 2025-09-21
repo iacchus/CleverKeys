@@ -64,16 +64,16 @@
 37-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:10:16-48
 38        <service
 38-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:5-16:15
-39            android:name="tribixbite.keyboard2.MinimalKeyboardService"
-39-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:14-72
+39            android:name="tribixbite.keyboard2.CleverKeysService"
+39-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:14-67
 40            android:directBootAware="true"
-40-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:195-225
+40-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:193-223
 41            android:exported="true"
-41-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:171-194
-42            android:label="CleverKeys Minimal Test"
-42-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:73-112
+41-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:169-192
+42            android:label="CleverKeys Neural Keyboard"
+42-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:68-110
 43            android:permission="android.permission.BIND_INPUT_METHOD" >
-43-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:113-170
+43-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:111-168
 44            <intent-filter>
 44-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:12:7-14:23
 45                <action android:name="android.view.InputMethod" />

@@ -967,13 +967,11 @@
     <item name="android:textSize">@dimen/emoji_text_size</item>
     <item name="android:textColor">?attr/emoji_color</item>
   </style>
-    <style name="emojiTypeButton">
-    <item name="android:padding">1px</item>
-    <item name="android:gravity">center</item>
-    <item name="android:minHeight">18dp</item>
-    <item name="android:background">?attr/emoji_button_bg</item>
-    <item name="android:textColor">?attr/emoji_key_text</item>
-    <item name="android:textSize">18dp</item>
+    <style name="emojiTypeButton" parent="@android:style/Widget.Button">
+    <item name="android:background">?attr/colorKey</item>
+    <item name="android:textColor">?attr/colorLabel</item>
+    <item name="android:textSize">18sp</item>
+    <item name="android:layout_weight">1</item>
   </style>
     <style name="paragraph">
     <item name="android:layout_width">fill_parent</item>

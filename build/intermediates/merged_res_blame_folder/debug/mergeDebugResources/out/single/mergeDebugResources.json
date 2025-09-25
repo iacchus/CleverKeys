@@ -1,11 +1,11 @@
 [
     {
-        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_latn_qwerty_us.xml.flat",
-        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/latn_qwerty_us.xml"
-    },
-    {
         "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_latn_qwerty_da.xml.flat",
         "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/latn_qwerty_da.xml"
+    },
+    {
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_latn_qwerty_us.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/latn_qwerty_us.xml"
     },
     {
         "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_latn_qwerty_cy.xml.flat",
@@ -40,20 +40,20 @@
         "source": "tribixbite.keyboard2-build-11:/raw/version_info.txt"
     },
     {
-        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_latn_qwerty_hu.xml.flat",
-        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/latn_qwerty_hu.xml"
-    },
-    {
-        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_deva_phonetic_in.xml.flat",
-        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/deva_phonetic_in.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/layout_keyboard_with_suggestions.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-cleverkeys-17:/layout/keyboard_with_suggestions.xml"
     },
     {
         "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_latn_workman_us.xml.flat",
         "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/latn_workman_us.xml"
     },
     {
-        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/layout_keyboard_with_suggestions.xml.flat",
-        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-cleverkeys-17:/layout/keyboard_with_suggestions.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_deva_phonetic_in.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/deva_phonetic_in.xml"
+    },
+    {
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_latn_qwerty_hu.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/latn_qwerty_hu.xml"
     },
     {
         "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_greekmath.xml.flat",
@@ -64,12 +64,12 @@
         "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-cleverkeys-17:/drawable/doc_anim_round_trip.xml"
     },
     {
-        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_latn_qwerty_ga.xml.flat",
-        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/latn_qwerty_ga.xml"
-    },
-    {
         "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_arab_pc.xml.flat",
         "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/arab_pc.xml"
+    },
+    {
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_latn_qwerty_ga.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-build-11:/xml/latn_qwerty_ga.xml"
     },
     {
         "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/tribixbite.keyboard2-debug-16:/xml_latn_neo2.xml.flat",

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_name_debug">Unexpected Keyboard (Debug)</string>
+    <string name="app_name_release">Unexpected Keyboard</string>
+    <string msgid="6128938260108474660" name="bottom_sheet_collapse_description">"ボトムシートを折りたたみます"</string>
+    <string msgid="1918297411568599192" name="bottom_sheet_dismiss_description">"ボトムシートを閉じます"</string>
+    <string msgid="7772321844937772780" name="bottom_sheet_drag_handle_description">"ドラッグ ハンドル"</string>
+    <string msgid="4324434199045499117" name="bottom_sheet_expand_description">"ボトムシートを開きます"</string>
+    <string msgid="881409763997275156" name="call_notification_answer_action">"応答"</string>
+    <string msgid="8793775615905189152" name="call_notification_answer_video_action">"ビデオ"</string>
+    <string msgid="3229508546291798546" name="call_notification_decline_action">"拒否"</string>
+    <string msgid="2659457946726154263" name="call_notification_hang_up_action">"通話終了"</string>
+    <string msgid="6107532579223922871" name="call_notification_incoming_text">"着信"</string>
+    <string msgid="8623827134497363134" name="call_notification_ongoing_text">"通話中"</string>
+    <string msgid="59049573811482460" name="call_notification_screening_text">"着信をスクリーニング中"</string>
+    <string name="clipboard_history_heading">最近コピーしたテキスト</string>
+    <string name="clipboard_pin_heading">お気に入り</string>
+    <string name="clipboard_remove_confirm">クリップボードから削除しますか?</string>
+    <string name="clipboard_remove_confirmed">はい</string>
+    <string msgid="406453423630273620" name="close_drawer">"ナビゲーションメニューを閉じる"</string>
+    <string msgid="7573152094250666567" name="close_sheet">"シートを閉じる"</string>
+    <string msgid="5389587048670450460" name="collapsed">"閉じています"</string>
+    <string msgid="3499643850558715142" name="date_input_headline">"入力された日付"</string>
+    <string msgid="8562356184193964298" name="date_input_headline_description">"入力された日付: %1$s"</string>
+    <string msgid="5281836720766682161" name="date_input_invalid_for_pattern">"想定されるパターンと日付が一致しません: %1$s"</string>
+    <string msgid="6114792992433444995" name="date_input_invalid_not_allowed">"許可されていない日付です: %1$s"</string>
+    <string msgid="8434112129235255568" name="date_input_invalid_year_range">"想定される年の範囲（%1$s～%2$s）から日付が外れています"</string>
+    <string msgid="5194825853981987218" name="date_input_label">"日付"</string>
+    <string msgid="5722931102250207748" name="date_input_no_input_description">"なし"</string>
+    <string msgid="3010396677286327048" name="date_input_title">"日付を選択"</string>
+    <string msgid="2846784065735639969" name="date_picker_headline">"選択した日付"</string>
+    <string msgid="4627306862713137085" name="date_picker_headline_description">"現在の選択: %1$s"</string>
+    <string msgid="5152441868029453612" name="date_picker_navigate_to_year_description">"年に移動 %1$s"</string>
+    <string msgid="5724377114289981899" name="date_picker_no_selection_description">"なし"</string>
+    <string msgid="8911933542023210271" name="date_picker_scroll_to_earlier_years">"これより前の年を表示するにはスクロールしてください"</string>
+    <string msgid="3226341140390493774" name="date_picker_scroll_to_later_years">"これより後の年を表示するにはスクロールしてください"</string>
+    <string msgid="9029369254443419167" name="date_picker_switch_to_calendar_mode">"カレンダー入力モードに切り替え"</string>
+    <string msgid="145089358343568971" name="date_picker_switch_to_day_selection">"スワイプして年を選択するか、タップして日付の選択に戻ります"</string>
+    <string msgid="1496750567914156598" name="date_picker_switch_to_input_mode">"テキスト入力モードに切り替え"</string>
+    <string msgid="8313783187901412102" name="date_picker_switch_to_next_month">"翌月に変更"</string>
+    <string msgid="7596294429748914881" name="date_picker_switch_to_previous_month">"前月に変更"</string>
+    <string msgid="3412370019845183965" name="date_picker_switch_to_year_selection">"年の選択に移行"</string>
+    <string msgid="9208721003668059792" name="date_picker_title">"日付を選択します"</string>
+    <string msgid="4775802721403526937" name="date_picker_today_description">"今日"</string>
+    <string msgid="8140324713311804736" name="date_picker_year_picker_pane_title">"年の選択ツールの表示"</string>
+    <string msgid="1891592555781755601" name="date_range_input_invalid_range_input">"入力された期間は無効です"</string>
+    <string msgid="2366412111888449406" name="date_range_input_title">"日付の入力"</string>
+    <string msgid="9048690781645835833" name="date_range_picker_day_in_range">"範囲内"</string>
+    <string msgid="4766270708882012148" name="date_range_picker_end_headline">"終了日"</string>
+    <string msgid="51495506931835470" name="date_range_picker_scroll_to_next_month">"次の月を表示するにはスクロールしてください"</string>
+    <string msgid="4371570854614540700" name="date_range_picker_scroll_to_previous_month">"前の月を表示するにはスクロールしてください"</string>
+    <string msgid="5759491386723090559" name="date_range_picker_start_headline">"開始日"</string>
+    <string msgid="690080476639943577" name="date_range_picker_title">"日付の選択"</string>
+    <string msgid="8038256446254964252" name="default_error_message">"入力値が無効です"</string>
+    <string msgid="6312721426453364202" name="default_popup_window_title">"ポップアップウィンドウ"</string>
+    <string msgid="4057925834421392736" name="dialog">"ダイアログ"</string>
+    <string msgid="1890207353314751437" name="dropdown_menu">"プルダウン メニュー"</string>
+    <string msgid="5974471714631304645" name="expanded">"開いています"</string>
+    <string msgid="6827826412747255547" name="in_progress">"処理しています"</string>
+    <string msgid="7933458017204019916" name="indeterminate">"一部 ON"</string>
+    <string name="key_action_done">完了</string>
+    <string name="key_action_go">実行</string>
+    <string name="key_action_next">次へ</string>
+    <string name="key_action_prev">戻る</string>
+    <string name="key_action_search">検索</string>
+    <string name="key_action_send">送信</string>
+    <string name="key_descr_capslock">Caps Lock</string>
+    <string name="key_descr_change_method">キーボードの切替</string>
+    <string name="key_descr_clipboard">クリップボード</string>
+    <string name="key_descr_compose">Compose</string>
+    <string name="key_descr_copy">コピー</string>
+    <string name="key_descr_cut">切り取り</string>
+    <string name="key_descr_end">End</string>
+    <string name="key_descr_home">Home</string>
+    <string name="key_descr_page_down">Page Down</string>
+    <string name="key_descr_page_up">Page Up</string>
+    <string name="key_descr_paste">貼り付け</string>
+    <string name="key_descr_pasteAsPlainText">書式なしで貼り付け</string>
+    <string name="key_descr_redo">やり直し</string>
+    <string name="key_descr_selectAll">すべて選択</string>
+    <string name="key_descr_subscript">下付き文字</string>
+    <string name="key_descr_superscript">上付き文字</string>
+    <string name="key_descr_switch_greekmath">ギリシャ文字と数学記号</string>
+    <string name="key_descr_undo">元に戻す</string>
+    <string name="key_descr_voice_typing">音声入力</string>
+    <string name="key_descr_ª">序数標識</string>
+    <string name="key_descr_º">序数標識</string>
+    <string name="launcher_button_imepicker">キーボードを選択</string>
+    <string name="launcher_button_imesettings">キーボードを有効化</string>
+    <string name="launcher_description">このアプリは仮想キーボードです。下のボタンからシステム設定を開いてUnexpected Keyboardを有効化してください。</string>
+    <string name="launcher_sourcecode">このアプリはオープンソースのフリーウェアです。GitHubでソースコードを入手したり、不具合を報告したりできます。</string>
+    <string name="launcher_tryhere">有効化されている場合、ここでキーボードを試すことができます。</string>
+    <string name="launcher_tryhere_hint">文字を入力</string>
+    <string msgid="542007171693138492" name="navigation_menu">"ナビゲーションメニュー"</string>
+    <string msgid="6610465462668679431" name="not_selected">"未選択"</string>
+    <string msgid="875452955155264703" name="off">"オフ"</string>
+    <string msgid="8655164131929253426" name="on">"オン"</string>
+    <string name="pref_autocapitalisation_summary">文章の先頭でShiftキーを自動入力</string>
+    <string name="pref_autocapitalisation_title">自動大文字化</string>
+    <string name="pref_border_config_title">キー形状の設定</string>
+    <string name="pref_border_width_title">縁取り</string>
+    <string name="pref_category_behavior">挙動</string>
+    <string name="pref_category_layout">レイアウト</string>
+    <string name="pref_category_style">表示</string>
+    <string name="pref_category_typing">入力</string>
+    <string name="pref_character_size_summary">キーボードに表示される文字の大きさ (%.2fx)</string>
+    <string name="pref_character_size_title">文字の大きさ</string>
+    <string name="pref_circle_sensitivity_e_disabled">無効</string>
+    <string name="pref_circle_sensitivity_e_high">高</string>
+    <string name="pref_circle_sensitivity_e_low">低</string>
+    <string name="pref_circle_sensitivity_e_medium">中</string>
+    <string name="pref_circle_sensitivity_title">円形ジェスチャーの感度</string>
+    <string name="pref_corners_radius_title">丸み</string>
+    <string name="pref_custom_layout_title">カスタムレイアウト</string>
+    <string name="pref_extra_keys_custom">キーを追加</string>
+    <string name="pref_extra_keys_internal">キーボードに表示するキーを選択</string>
+    <string name="pref_extra_keys_title">追加のキーの設定</string>
+    <string name="pref_horizontal_margin_title">左右の余白</string>
+    <string name="pref_key_activated_opacity">押下中のキーの不透明度</string>
+    <string name="pref_key_horizontal_space">キー間の左右の間隔</string>
+    <string name="pref_key_opacity">キーの不透明度</string>
+    <string name="pref_key_vertical_space">キー間の上下の間隔</string>
+    <string name="pref_keyboard_height_title">キーボードの高さ</string>
+    <string name="pref_keyboard_opacity">背景の不透明度</string>
+    <string name="pref_keyrepeat_enabled">長押しでキーを連続入力する</string>
+    <string name="pref_label_brightness">文字の明るさ</string>
+    <string name="pref_landscape">横向き</string>
+    <string name="pref_layout_e_custom">カスタムレイアウト</string>
+    <string name="pref_layout_e_system">システム設定</string>
+    <string name="pref_layouts_add">レイアウトを追加</string>
+    <string name="pref_layouts_item">レイアウト %1$d: %2$s</string>
+    <string name="pref_layouts_remove_custom">レイアウトを削除</string>
+    <string name="pref_lock_double_tap_summary">どの装飾キーも長押しで固定できます</string>
+    <string name="pref_lock_double_tap_title">ShiftをダブルタップでCaps Lock</string>
+    <string name="pref_long_interval_title">キーを連続入力する間隔</string>
+    <string name="pref_long_timeout_title">キー長押しの時間</string>
+    <string name="pref_margin_bottom_title">下の余白</string>
+    <string name="pref_number_row_summary">テンキーが非表示の場合最上段に数字の行を追加します</string>
+    <string name="pref_number_row_title">数字の行を表示</string>
+    <string name="pref_numpad_layout">テンキーのレイアウト</string>
+    <string name="pref_numpad_layout_e_high_first">大きい数字を上に</string>
+    <string name="pref_numpad_layout_e_low_first">小さい数字を上に</string>
+    <string name="pref_portrait">縦向き</string>
+    <string name="pref_show_numpad_always">表示する</string>
+    <string name="pref_show_numpad_landscape">横向きの時は表示</string>
+    <string name="pref_show_numpad_never">表示しない</string>
+    <string name="pref_show_numpad_title">テンキーを表示</string>
+    <string name="pref_swipe_dist_e_default">普通</string>
+    <string name="pref_swipe_dist_e_far">やや長い</string>
+    <string name="pref_swipe_dist_e_short">やや短い</string>
+    <string name="pref_swipe_dist_e_very_far">長い</string>
+    <string name="pref_swipe_dist_e_very_short">短い</string>
+    <string name="pref_swipe_dist_summary">キーの角をスワイプする距離 (%s)</string>
+    <string name="pref_swipe_dist_title">スワイプ距離</string>
+    <string name="pref_switch_input_immediate_summary">キーボード切替キーの挙動</string>
+    <string name="pref_switch_input_immediate_title">最後に使用したキーボードに切替</string>
+    <string name="pref_theme">テーマ</string>
+    <string name="pref_theme_e_altblack">黒(別バージョン)</string>
+    <string name="pref_theme_e_black">黒</string>
+    <string name="pref_theme_e_dark">ダークモード</string>
+    <string name="pref_theme_e_desert">Desert</string>
+    <string name="pref_theme_e_epaper">ePaper</string>
+    <string name="pref_theme_e_jungle">Jungle</string>
+    <string name="pref_theme_e_light">ライトモード</string>
+    <string name="pref_theme_e_monet">Monet (システム)</string>
+    <string name="pref_theme_e_monetdark">Monet (ダーク)</string>
+    <string name="pref_theme_e_monetlight">Monet (ライト)</string>
+    <string name="pref_theme_e_system">システム設定</string>
+    <string name="pref_theme_e_white">白</string>
+    <string name="pref_vibrate_custom">キーボード独自の振動設定</string>
+    <string name="pref_vibrate_duration_title">振動の時間</string>
+    <string msgid="5941395253238309765" name="range_end">"範囲の末尾"</string>
+    <string msgid="7097486360902471446" name="range_start">"範囲の先頭"</string>
+    <string msgid="6420018528474762666" name="search_bar_search">"検索"</string>
+    <string msgid="6043586758067023" name="selected">"選択済み"</string>
+    <string name="short_description">軽量でプライバシーに配慮したAndroid用仮想キーボード</string>
+    <string msgid="3962933905051144957" name="snackbar_dismiss">"閉じる"</string>
+    <string msgid="6277540029070332960" name="status_bar_notification_info_overflow">"999+"</string>
+    <string name="store_description">このキーボードは、キーの角をスワイプすることで様々なキーを入力できます。\n\nこのアプリは元々はTermuxでのプログラミング用に設計されました。\nしかし、今では普段の入力にも適しています。\nPCキーボードでの半角入力を再現しています。日本語入力、変換は出来ません。\n\nこのアプリは広告を含まず、インターネットに接続せず、そしてオープンソースです。</string>
+    <string msgid="7189888345201419934" name="suggestions_available">"検索候補は次のとおりです"</string>
+    <string msgid="2561197295334830845" name="switch_role">"切り替える"</string>
+    <string msgid="1672349317127674378" name="tab">"タブ"</string>
+    <string msgid="5946805113151406391" name="template_percent">"<ns1:g id="PERCENTAGE">%1$d</ns1:g>パーセント。"</string>
+    <string msgid="5096144640014509074" name="time_picker_am">"AM"</string>
+    <string msgid="7241191970823415723" name="time_picker_hour">"時間"</string>
+    <string msgid="4149641012513526783" name="time_picker_hour_24h_suffix">"%1$d 時間"</string>
+    <string msgid="6081676287789101196" name="time_picker_hour_selection">"時刻を選択"</string>
+    <string msgid="6952032626122080528" name="time_picker_hour_suffix">"%1$d 時"</string>
+    <string msgid="5298761125390275834" name="time_picker_hour_text_field">"（時間単位）"</string>
+    <string msgid="6116528647594005945" name="time_picker_minute">"分"</string>
+    <string msgid="8494777394375441602" name="time_picker_minute_selection">"分を選択"</string>
+    <string msgid="3206486707779478173" name="time_picker_minute_suffix">"%1$d 分"</string>
+    <string msgid="994099543833979061" name="time_picker_minute_text_field">"（分単位）"</string>
+    <string msgid="7352665290700284516" name="time_picker_period_toggle_description">"午前または午後を選択"</string>
+    <string msgid="2232702812657998674" name="time_picker_pm">"PM"</string>
+    <string msgid="2732804537909054941" name="tooltip_long_press_label">"ツールチップを表示します"</string>
+    <string msgid="8191239805703103845" name="tooltip_pane_description">"ツールチップ"</string>
+</resources>

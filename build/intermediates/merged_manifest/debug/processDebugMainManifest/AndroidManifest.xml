@@ -87,6 +87,18 @@
             android:exported="false"
             android:label="@string/pref_swipe_calibration_title"
             android:theme="@style/settingsTheme" />
+        <activity
+            android:name="tribixbite.keyboard2.NeuralSettingsActivity"
+            android:directBootAware="true"
+            android:exported="false"
+            android:label="Neural Settings"
+            android:theme="@style/settingsTheme" />
+        <activity
+            android:name="tribixbite.keyboard2.NeuralBrowserActivity"
+            android:directBootAware="true"
+            android:exported="false"
+            android:label="Neural Model Browser"
+            android:theme="@style/settingsTheme" />
 
         <uses-library
             android:name="androidx.window.extensions"

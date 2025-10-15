@@ -2458,3 +2458,153 @@ Resource access helper with fallbacks to prevent crashes from wrong resource IDs
 4. KeyboardSwipeRecognizer (Bug #256) - 100% missing
 5. LanguageDetector (Bug #257) - 100% missing
 
+
+---
+
+## File 60/251: LoopGestureDetector.java (346 lines) - MISSING IN KOTLIN
+
+**QUALITY**: 💀 **CATASTROPHIC** - Entire loop gesture detection system missing
+
+### SUMMARY
+
+**Java Implementation (346 lines)**:
+- Detects loop gestures for repeated letters (e.g., "hello", "book", "coffee")
+- Analyzes swipe paths for circular patterns around keys
+- Calculates geometric center, radius, and angle traversal
+- Validates loop properties (radius bounds, angle thresholds)
+- Estimates repeat count based on loop completeness
+- Applies detected loops to modify key sequence
+
+**Kotlin Implementation**:
+- ❌ **COMPLETELY MISSING** - File does not exist
+
+### BUG #258 (CATASTROPHIC): Entire LoopGestureDetector system missing
+
+**Java Components (346 lines)**:
+
+1. **Loop Data Structure** (lines 39-76):
+   - `Loop` class with startIndex, endIndex, center, radius, totalAngle
+   - `isClockwise()`: Determines loop direction
+   - `getRepeatCount()`: Estimates repeat count (2-3 based on angle)
+   - Full loop (360°) = 2 occurrences, 1.5 loops (520°) = 3 occurrences
+
+2. **Loop Detection Algorithm** (lines 87-156):
+   - `detectLoops()`: Main detection API (lines 94-115)
+   - Scans path with MIN_LOOP_POINTS = 8 window
+   - `detectLoopAtPoint()`: Finds closure points within CLOSURE_THRESHOLD (30px)
+   - Calculates loop properties: center, average radius, total angle
+   - Validates: MIN_LOOP_RADIUS (15px), MAX_LOOP_RADIUS_FACTOR (1.5x key size)
+   - Angle validation: MIN_LOOP_ANGLE (270°) to MAX_LOOP_ANGLE (450°)
+
+3. **Geometric Calculations** (lines 161-219):
+   - `calculateCenter()`: Geometric center of points
+   - `calculateAverageRadius()`: Mean distance from center
+   - `calculateTotalAngle()`: Total angle traversed (clockwise/counter-clockwise)
+   - Angle normalization to [-π, π] then converted to degrees
+
+4. **Pattern Application** (lines 278-324):
+   - `applyLoops()`: Modifies key sequence with repeated letters
+   - Maps loop positions to character sequence
+   - Inserts repeated characters based on loop count
+   - Preserves non-looped characters
+
+5. **Word Pattern Validation** (lines 330-345):
+   - `matchesLoopPattern()`: Validates loops match word structure
+   - Finds repeated letter positions in word
+   - Checks if detected loops align with expected repeats
+
+**Impact**: ❌ CATASTROPHIC - REPEATED LETTER TYPING BROKEN
+- Users cannot easily type words with double letters ("book", "hello", "coffee")
+- Loop gestures don't work at all
+- Must manually tap twice for repeated letters (terrible UX)
+- Significantly degrades swipe typing experience
+
+**Use Cases Lost**:
+- Words like: hello, book, coffee, letter, success, happy, etc.
+- Any word with consecutive identical letters
+- Natural circular gestures for emphasis
+- Quick double-letter input
+
+**Missing Features**:
+- Loop geometry detection (center, radius, angle)
+- Clockwise/counter-clockwise detection
+- Repeat count estimation
+- Loop validation logic
+- Key sequence modification
+- Pattern matching for known words
+
+**Files Affected**:
+- KeyboardSwipeRecognizer (Bug #256) would integrate this
+- Neural prediction could benefit from loop detection
+- User experience severely degraded without this feature
+
+**Implementation Complexity**: HIGH
+- Requires geometric analysis (circles, angles, radii)
+- Path segmentation algorithms
+- Angle normalization and wrap-around handling
+- Key position mapping
+- Pattern matching heuristics
+- 346 lines of specialized gesture recognition
+
+### VERDICT: 💀 CATASTROPHIC (Bug #258)
+
+**Missing**: 100% (346 lines, 0 lines implemented)
+
+**Recommendation**: IMPLEMENT IMMEDIATELY FOR PRODUCTION USE
+- Critical for natural swipe typing experience
+- Users expect loop gestures for repeated letters
+- Standard feature in modern swipe keyboards
+- Relatively self-contained module (can implement independently)
+
+**Assessment**: Another critical missing gesture recognition system. LoopGestureDetector is essential for typing common words with repeated letters. Without it, users must manually tap repeatedly, severely degrading the swipe typing experience.
+
+**Related Missing Components**:
+- Bug #255: BigramModel (uses contextual predictions)
+- Bug #256: KeyboardSwipeRecognizer (would integrate loop detection)
+- Bug #257: LanguageDetector (multi-language support)
+- Bug #258: LoopGestureDetector (repeated letter gestures)
+
+**Total Missing Gesture/Prediction Systems Count**: 6
+1. KeyValueParser (Bug #1) - 96% missing
+2. ExtraKeys - 95% missing
+3. BigramModel (Bug #255) - 100% missing
+4. KeyboardSwipeRecognizer (Bug #256) - 100% missing
+5. LanguageDetector (Bug #257) - 100% missing
+6. LoopGestureDetector (Bug #258) - 100% missing
+
+
+---
+
+## File 61/251: NgramModel.java (350 lines) - MISSING IN KOTLIN
+
+**QUALITY**: 💀 **CATASTROPHIC** - Entire N-gram language model missing
+
+**Java Implementation**: 350 lines with unigram/bigram/trigram probabilities for English
+**Kotlin Implementation**: ❌ **COMPLETELY MISSING**
+
+### BUG #259 (CATASTROPHIC): Entire NgramModel system missing
+
+**Components**:
+- Unigram, bigram, trigram probability maps (lines 28-42)
+- Start/end character probabilities
+- Common English patterns (e.g., "th":0.037, "the":0.030)
+- Weighted scoring: TRIGRAM(60%) + BIGRAM(30%) + UNIGRAM(10%)
+- Should provide 15-25% accuracy improvement
+
+**Impact**: ❌ CATASTROPHIC - NO STATISTICAL LANGUAGE MODELING
+- Neural predictions lack contextual probability weighting
+- Common letter sequences not prioritized ("th", "he", "in", "the", "and")
+- No start/end character probability modeling
+- Prediction accuracy reduced by 15-25%
+
+**Missing**: 100% (350 lines)
+
+### VERDICT: 💀 CATASTROPHIC (Bug #259)
+
+**Total Missing Prediction Systems: 7**
+1. BigramModel (Bug #255)
+2. KeyboardSwipeRecognizer (Bug #256)  
+3. LanguageDetector (Bug #257)
+4. LoopGestureDetector (Bug #258)
+5. NgramModel (Bug #259)
+

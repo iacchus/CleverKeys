@@ -2626,54 +2626,339 @@ Resource access helper with fallbacks to prevent crashes from wrong resource IDs
 
 ---
 
-## File 62/251: SwipeTypingEngine.java (258 lines) - ARCHITECTURAL DIFFERENCE
+## File 62/251: SwipeTypingEngine.java (258 lines) vs NeuralSwipeEngine.kt (174 lines)
 
-**QUALITY**: ⚠️ **ARCHITECTURAL** - Orchestration layer replaced by pure ONNX approach
+**STATUS**: 🔴 **MASSIVE FEATURE LOSS** - Multi-strategy orchestration → Single ONNX predictor
 
-**Java Implementation**: 258 lines orchestrating multiple prediction strategies
-**Kotlin Implementation**: ❌ **INTENTIONALLY REPLACED** by NeuralSwipeEngine + OnnxSwipePredictorImpl
+**LINE-BY-LINE FEATURE COMPARISON:**
 
-### BUG #260 (ARCHITECTURAL): Multi-strategy orchestration replaced by pure ONNX
-
-**Java Architecture**:
-- SwipeTypingEngine orchestrates KeyboardSwipeRecognizer, WordPredictor, SwipeScorer
-- Classifies input quality (SwipeDetector.SwipeClassification)
-- Routes to appropriate predictor based on classification
-- Hybrid prediction combining CGR + dictionary + scoring
-- Fallback to sequence prediction for low-quality swipes
-- Filters predictions to ≥3 characters for swipe typing
-
-**Kotlin Architecture**:
-- NeuralSwipeEngine: High-level ONNX API
-- OnnxSwipePredictorImpl: Pure neural prediction
-- NeuralPredictionPipeline: Pipeline orchestration
-- PredictionCache: LRU caching layer
-- PredictionRepository: Coroutine-based repository
-
-**Impact**: ⚠️ ARCHITECTURAL DESIGN CHOICE
-- ✅ PRO: Simpler architecture with single prediction path
-- ✅ PRO: Modern neural approach with potentially better accuracy
-- ✅ PRO: No need for dictionary management or template generation
-- ❌ CON: No fallback strategies if ONNX fails
-- ❌ CON: No hybrid scoring combining multiple approaches
-- ❌ CON: No input quality classification for adaptive routing
-
-**Design Rationale** (from CLAUDE.md):
+### **JAVA FIELDS (lines 16-20):**
+```java
+private final KeyboardSwipeRecognizer _cgrRecognizer;    // LINE 16
+private final WordPredictor _sequencePredictor;          // LINE 17
+private final SwipeDetector _swipeDetector;              // LINE 18
+private final SwipeScorer _scorer;                       // LINE 19
+private Config _config;                                  // LINE 20
 ```
-CleverKeys is a **complete Kotlin rewrite** featuring:
-- **Pure ONNX neural prediction** (NO CGR, NO fallbacks)
-- **Advanced gesture recognition** with sophisticated algorithms
-- **Modern Kotlin architecture** with 75% code reduction
+**KOTLIN EQUIVALENT:**
+- ❌ MISSING: _cgrRecognizer (CGR prediction strategy)
+- ❌ MISSING: _sequencePredictor (dictionary fallback)
+- ❌ MISSING: _swipeDetector (input classification)
+- ❌ MISSING: _scorer (hybrid scoring system)
+- ✅ HAS: config field
+
+**FEATURES LOST**: 4 entire prediction strategies/components
+
+---
+
+### **JAVA CONSTRUCTOR (lines 23-37):**
+```java
+public SwipeTypingEngine(android.content.Context context, WordPredictor sequencePredictor, Config config)
+{
+  _cgrRecognizer = new KeyboardSwipeRecognizer(context);
+  _sequencePredictor = sequencePredictor;
+  _swipeDetector = new SwipeDetector();
+  _scorer = new SwipeScorer();
+  _config = config;
+  if (_sequencePredictor != null) _sequencePredictor.setConfig(config);
+}
 ```
+**KOTLIN EQUIVALENT (lines 11-14):**
+```kotlin
+class NeuralSwipeEngine(
+    private val context: Context,
+    private val config: Config
+)
+```
+**FEATURES LOST**:
+- ❌ No WordPredictor parameter
+- ❌ No CGR recognizer initialization
+- ❌ No SwipeDetector initialization
+- ❌ No SwipeScorer initialization
+- ❌ No setConfig propagation to multiple predictors
 
-**Missing**: N/A - Intentional architectural change
+---
 
-**Recommendation**: CURRENT DESIGN IS INTENTIONAL
-- Pure ONNX approach is explicit design goal
-- Consider adding fallback only if ONNX prediction fails
-- Monitor production accuracy vs Java multi-strategy system
+### **JAVA METHOD: setKeyboardDimensions() (lines 42-48):**
+```java
+public void setKeyboardDimensions(float width, float height)
+{
+  if (_cgrRecognizer != null)
+    _cgrRecognizer.setKeyboardDimensions(width, height);
+}
+```
+**KOTLIN EQUIVALENT (lines 110-115):**
+```kotlin
+fun setKeyboardDimensions(width: Int, height: Int) {
+    neuralPredictor?.setKeyboardDimensions(width, height)
+}
+```
+**FEATURES CHANGED**:
+- ✅ HAS: setKeyboardDimensions method
+- ⚠️ DIFFERENT: Passes to ONNX predictor instead of CGR recognizer
+- ⚠️ TYPE: Float → Int
 
-**Assessment**: This is not a bug but an intentional architectural simplification. The Kotlin version replaced the complex multi-strategy orchestration with a single unified ONNX neural prediction pipeline. Success depends on ONNX model accuracy matching or exceeding the Java hybrid system.
+---
+
+### **JAVA METHOD: setRealKeyPositions() (lines 53-59):**
+```java
+public void setRealKeyPositions(java.util.Map<Character, android.graphics.PointF> realPositions)
+{
+  if (_cgrRecognizer != null)
+    _cgrRecognizer.setRealKeyPositions(realPositions);
+}
+```
+**KOTLIN EQUIVALENT (lines 120-125):**
+```kotlin
+fun setRealKeyPositions(keyPositions: Map<Char, PointF>) {
+    neuralPredictor?.setRealKeyPositions(keyPositions)
+}
+```
+**FEATURES CHANGED**:
+- ✅ HAS: setRealKeyPositions method
+- ⚠️ DIFFERENT: Passes to ONNX predictor instead of CGR recognizer
+
+---
+
+### **JAVA METHOD: setConfig() (lines 64-72):**
+```java
+public void setConfig(Config config)
+{
+  _config = config;
+  if (_sequencePredictor != null)
+    _sequencePredictor.setConfig(config);
+  _scorer.setConfig(config);
+}
+```
+**KOTLIN EQUIVALENT (lines 94-97):**
+```kotlin
+fun setConfig(newConfig: Config) {
+    neuralPredictor?.setConfig(newConfig)
+}
+```
+**FEATURES LOST**:
+- ❌ No config propagation to WordPredictor (_sequencePredictor)
+- ❌ No config propagation to SwipeScorer (_scorer)
+- ⚠️ Only propagates to single ONNX predictor
+
+---
+
+### **JAVA METHOD: predict() - MAIN PREDICTION (lines 77-102):**
+```java
+public WordPredictor.PredictionResult predict(SwipeInput input)
+{
+  // Classify the input
+  SwipeDetector.SwipeClassification classification = _swipeDetector.classifyInput(input);
+
+  // FORCE KeyboardSwipeRecognizer path for consistency with calibration
+  if (!classification.isSwipe) {
+    // Regular typing - use sequence predictor only
+    return _sequencePredictor.predictWordsWithScores(input.keySequence);
+  }
+
+  // ALWAYS use KeyboardSwipeRecognizer for swipes (like calibration page)
+  return hybridPredict(input, classification);
+}
+```
+**KOTLIN EQUIVALENT (lines 55-82):**
+```kotlin
+fun predict(input: SwipeInput): PredictionResult {
+    if (!isInitialized) runBlocking { initialize() }
+    val predictor = neuralPredictor ?: return PredictionResult.empty
+    return try {
+        val (result, duration) = measureTimeNanos {
+            runBlocking { predictor.predict(input) }
+        }
+        result
+    } catch (e: Exception) {
+        PredictionResult.empty
+    }
+}
+```
+**FEATURES LOST**:
+- ❌ NO SwipeDetector.classifyInput() - No input quality classification
+- ❌ NO classification.isSwipe check - Treats all input as swipe
+- ❌ NO _sequencePredictor.predictWordsWithScores() fallback for regular typing
+- ❌ NO hybridPredict() - No CGR + dictionary combination
+- ❌ NO classification-based routing
+
+---
+
+### **JAVA METHOD: hybridPredict() (lines 107-189) - 82 LINES:**
+```java
+private WordPredictor.PredictionResult hybridPredict(SwipeInput input,
+                                                     SwipeDetector.SwipeClassification classification)
+{
+  List<ScoredCandidate> allCandidates = new ArrayList<>();
+
+  // Get CGR predictions using working KeyboardSwipeRecognizer
+  if (_cgrRecognizer != null && input.coordinates.size() > 2) {
+    List<KeyboardSwipeRecognizer.RecognitionResult> cgrResults =
+      _cgrRecognizer.recognizeSwipe(input.coordinates, new ArrayList<>());
+
+    for (KeyboardSwipeRecognizer.RecognitionResult result : cgrResults) {
+      allCandidates.add(new ScoredCandidate(result.word, (float)result.totalScore, "CGR"));
+    }
+  }
+
+  // Sort by KeyboardSwipeRecognizer totalScore
+  Collections.sort(allCandidates, ...);
+
+  // Convert to result format with swipe-specific filtering
+  List<String> words = new ArrayList<>();
+  List<Integer> scores = new ArrayList<>();
+
+  int maxResults = _config.swipe_typing_enabled ? 10 : 5;
+  for (ScoredCandidate candidate : allCandidates) {
+    // DESIGN SPEC: Swipe predictions must be ≥3 characters minimum
+    if (candidate.word.length() < 3) continue;
+    words.add(candidate.word);
+    scores.add((int)candidate.finalScore);
+    if (++resultCount >= maxResults) break;
+  }
+
+  return new WordPredictor.PredictionResult(words, scores);
+}
+```
+**KOTLIN EQUIVALENT:**
+- ❌ **COMPLETELY MISSING** - No hybridPredict() method at all
+- ❌ NO CGR recognizer calls
+- ❌ NO ScoredCandidate creation
+- ❌ NO multi-source candidate merging
+- ❌ NO scoring from multiple predictors
+- ❌ NO result filtering (≥3 character minimum)
+- ❌ NO maxResults based on config.swipe_typing_enabled
+- ❌ NO logging of CGR results
+- ❌ NO error handling for CGR failures
+
+**FEATURES LOST**: 82 lines of hybrid prediction logic
+
+---
+
+### **JAVA METHOD: enhancedSequencePredict() (lines 194-225) - 31 LINES:**
+```java
+private WordPredictor.PredictionResult enhancedSequencePredict(SwipeInput input,
+                                                               SwipeDetector.SwipeClassification classification)
+{
+  WordPredictor.PredictionResult result = _sequencePredictor.predictWordsWithScores(input.keySequence);
+
+  List<String> filteredWords = new ArrayList<>();
+  List<Integer> adjustedScores = new ArrayList<>();
+
+  for (int i = 0; i < result.words.size(); i++) {
+    String word = result.words.get(i);
+    if (word.length() < 3) continue;  // Skip short words
+
+    int baseScore = result.scores.get(i);
+    float adjustment = 1.0f + (classification.confidence * 0.5f);
+    filteredWords.add(word);
+    adjustedScores.add((int)(baseScore * adjustment));
+  }
+
+  return new WordPredictor.PredictionResult(filteredWords, adjustedScores);
+}
+```
+**KOTLIN EQUIVALENT:**
+- ❌ **COMPLETELY MISSING** - No enhancedSequencePredict() method
+- ❌ NO dictionary-based fallback prediction
+- ❌ NO confidence-based score adjustment
+- ❌ NO short word filtering (< 3 characters)
+- ❌ NO WordPredictor integration
+
+**FEATURES LOST**: 31 lines of enhanced sequence prediction
+
+---
+
+### **JAVA HELPER METHOD: findCandidate() (lines 230-238):**
+```java
+private ScoredCandidate findCandidate(List<ScoredCandidate> candidates, String word)
+{
+  for (ScoredCandidate c : candidates)
+    if (c.word.equals(word)) return c;
+  return null;
+}
+```
+**KOTLIN EQUIVALENT:**
+- ❌ **COMPLETELY MISSING** - No findCandidate() helper
+
+---
+
+### **JAVA INNER CLASS: ScoredCandidate (lines 243-257):**
+```java
+public static class ScoredCandidate
+{
+  public String word;
+  public float score;
+  public float finalScore;
+  public String source;
+
+  public ScoredCandidate(String word, float score, String source) {
+    this.word = word;
+    this.score = score;
+    this.finalScore = score;
+    this.source = source;
+  }
+}
+```
+**KOTLIN EQUIVALENT:**
+- ❌ **COMPLETELY MISSING** - No ScoredCandidate data class
+- ❌ NO score tracking from multiple sources
+- ❌ NO finalScore calculation
+- ❌ NO source attribution ("CGR", "Dictionary", etc.)
+
+---
+
+### **KOTLIN-ONLY FEATURES (not in Java):**
+```kotlin
+suspend fun initialize(): Boolean                              // LINE 30
+suspend fun predictAsync(input: SwipeInput): PredictionResult  // LINE 87
+fun setNeuralConfig(neuralConfig: NeuralConfig)               // LINE 102
+fun setDebugLogger(logger: ((String) -> Unit)?)               // LINE 130
+val isReady: Boolean                                          // LINE 138
+suspend fun getStats(): PredictionStats                       // LINE 143
+data class PredictionStats(...)                               // LINES 158-163
+fun cleanup()                                                 // LINE 168
+```
+**NEW FEATURES**: 8 Kotlin-specific additions
+
+---
+
+## **SUMMARY: File 62/251**
+
+**JAVA: SwipeTypingEngine.java - 258 lines**
+- 4 predictor components (CGR, WordPredictor, SwipeDetector, SwipeScorer)
+- 3 major methods (predict, hybridPredict, enhancedSequencePredict)
+- 1 helper method (findCandidate)
+- 1 data class (ScoredCandidate)
+- Multi-strategy prediction with fallbacks
+
+**KOTLIN: NeuralSwipeEngine.kt - 174 lines**
+- 1 predictor component (ONNX neural predictor)
+- 2 major methods (predict, predictAsync)
+- 8 utility methods (initialize, setters, getStats, cleanup)
+- 1 data class (PredictionStats)
+- Single-strategy prediction, NO fallbacks
+
+**FEATURES LOST**:
+- ❌ 4 predictor components (CGR, WordPredictor, SwipeDetector, SwipeScorer)
+- ❌ hybridPredict() method (82 lines)
+- ❌ enhancedSequencePredict() method (31 lines)
+- ❌ findCandidate() helper
+- ❌ ScoredCandidate class
+- ❌ Input quality classification
+- ❌ Multi-strategy routing
+- ❌ CGR fallback for calibration consistency
+- ❌ Dictionary fallback for regular typing
+- ❌ Result filtering (≥3 characters)
+- ❌ maxResults based on config
+- ❌ Score adjustment based on classification confidence
+
+**TOTAL MISSING**: ~145 lines of functionality
+
+**VERDICT**: ⚠️ **INTENTIONAL ARCHITECTURAL SIMPLIFICATION**
+- Kotlin replaced multi-strategy orchestration with pure ONNX
+- Success depends entirely on ONNX model quality
+- NO fallback strategies if ONNX fails or has low accuracy
 
 ---
 

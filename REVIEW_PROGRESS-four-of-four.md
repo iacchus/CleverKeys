@@ -2962,21 +2962,59 @@ fun cleanup()                                                 // LINE 168
 
 ---
 
-## File 63/251: SwipeScorer.java - ARCHITECTURAL DIFFERENCE
+## File 63/251: SwipeScorer.java (263 lines) vs NONE IN KOTLIN
 
-**QUALITY**: ⚠️ **ARCHITECTURAL** - Replaced by ONNX confidence scores
+**STATUS**: 🔴 **COMPLETELY MISSING** - Sophisticated 8-weight scoring system absent
 
-**Java Implementation**: Unknown lines (needs reading)
-**Kotlin Implementation**: ❌ **REPLACED** by beam search confidence scoring in OnnxSwipePredictorImpl
+**JAVA: SwipeScorer.java - 263 lines with 9 scoring factors**
+**KOTLIN: NONE - No SwipeScorer.kt file exists**
 
-### BUG #261 (ARCHITECTURAL): Specialized scoring system replaced by neural confidence
+**FEATURES LOST (ALL 263 LINES - 100%):**
 
-**Impact**: ⚠️ ARCHITECTURAL DESIGN CHOICE
-- Java: Dedicated SwipeScorer for hybrid result ranking
-- Kotlin: ONNX model outputs confidence scores directly
-- Neural confidence may be more accurate than hand-crafted scoring
+### **Main Scoring Method:**
+- ❌ calculateFinalScore() - Applies 8 configurable weights (67 lines)
 
-**Missing**: N/A - Scoring integrated into ONNX model
+### **Helper Methods (9 total):**
+- ❌ calculateLocationAccuracy() - Character match scoring (25 lines)
+- ❌ isSubsequence() - Ordered match detection (11 lines)
+- ❌ getWordFrequencyFactor() - Common word boosting (21 lines)
+- ❌ calculateVelocityScore() - Velocity CV calculation (35 lines)
+- ❌ matchesFirstLetter() - First letter validation (7 lines)
+- ❌ matchesLastLetter() - Last letter validation (7 lines)
+- ❌ applyWeight() - Exponential weight scaling (9 lines)
+- ❌ getQualityMultiplier() - Quality-based adjustment (15 lines)
+- ❌ setConfig() - Config integration (3 lines)
+
+### **Configurable Weights (8 from Config):**
+- ❌ swipe_confidence_shape_weight - Shape matching multiplier
+- ❌ swipe_confidence_location_weight - Location accuracy weight
+- ❌ swipe_confidence_frequency_weight - Word frequency boost
+- ❌ swipe_confidence_velocity_weight - Velocity consistency reward
+- ❌ swipe_first_letter_weight - First letter match bonus
+- ❌ swipe_last_letter_weight - Last letter match bonus
+- ❌ swipe_endpoint_bonus_weight - Both endpoints bonus
+- ❌ swipe_require_endpoints - Strict mode penalty (0.1x if endpoints don't match)
+
+### **Scoring Features:**
+- ❌ Shape matching (DTW distance correlation)
+- ❌ Location accuracy (character matches)
+- ❌ Word frequency (common word detection)
+- ❌ Velocity consistency (coefficient of variation)
+- ❌ First letter matching
+- ❌ Last letter matching
+- ❌ Endpoint bonus (both match)
+- ❌ Swipe quality multiplier (HIGH:1.2x, MEDIUM:1.0x, LOW:0.8x, NOT_SWIPE:0.5x)
+- ❌ Strict endpoint filtering
+
+**KOTLIN REPLACEMENT:**
+- ONNX beam search outputs raw log probabilities ONLY
+- No weighted scoring
+- No configurable adjustments
+- No endpoint prioritization
+- No velocity rewards
+- Pure neural scores with ZERO configurability
+
+**VERDICT**: 🔴 **COMPLETE FEATURE LOSS (263 lines / 100%)**
 
 ---
 

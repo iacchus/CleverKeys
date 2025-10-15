@@ -2603,8 +2603,176 @@ Resource access helper with fallbacks to prevent crashes from wrong resource IDs
 
 **Total Missing Prediction Systems: 7**
 1. BigramModel (Bug #255)
-2. KeyboardSwipeRecognizer (Bug #256)  
+2. KeyboardSwipeRecognizer (Bug #256)
 3. LanguageDetector (Bug #257)
 4. LoopGestureDetector (Bug #258)
 5. NgramModel (Bug #259)
+
+---
+
+## File 62/251: SwipeTypingEngine.java (258 lines) - ARCHITECTURAL DIFFERENCE
+
+**QUALITY**: ⚠️ **ARCHITECTURAL** - Orchestration layer replaced by pure ONNX approach
+
+**Java Implementation**: 258 lines orchestrating multiple prediction strategies
+**Kotlin Implementation**: ❌ **INTENTIONALLY REPLACED** by NeuralSwipeEngine + OnnxSwipePredictorImpl
+
+### BUG #260 (ARCHITECTURAL): Multi-strategy orchestration replaced by pure ONNX
+
+**Java Architecture**:
+- SwipeTypingEngine orchestrates KeyboardSwipeRecognizer, WordPredictor, SwipeScorer
+- Classifies input quality (SwipeDetector.SwipeClassification)
+- Routes to appropriate predictor based on classification
+- Hybrid prediction combining CGR + dictionary + scoring
+- Fallback to sequence prediction for low-quality swipes
+- Filters predictions to ≥3 characters for swipe typing
+
+**Kotlin Architecture**:
+- NeuralSwipeEngine: High-level ONNX API
+- OnnxSwipePredictorImpl: Pure neural prediction
+- NeuralPredictionPipeline: Pipeline orchestration
+- PredictionCache: LRU caching layer
+- PredictionRepository: Coroutine-based repository
+
+**Impact**: ⚠️ ARCHITECTURAL DESIGN CHOICE
+- ✅ PRO: Simpler architecture with single prediction path
+- ✅ PRO: Modern neural approach with potentially better accuracy
+- ✅ PRO: No need for dictionary management or template generation
+- ❌ CON: No fallback strategies if ONNX fails
+- ❌ CON: No hybrid scoring combining multiple approaches
+- ❌ CON: No input quality classification for adaptive routing
+
+**Design Rationale** (from CLAUDE.md):
+```
+CleverKeys is a **complete Kotlin rewrite** featuring:
+- **Pure ONNX neural prediction** (NO CGR, NO fallbacks)
+- **Advanced gesture recognition** with sophisticated algorithms
+- **Modern Kotlin architecture** with 75% code reduction
+```
+
+**Missing**: N/A - Intentional architectural change
+
+**Recommendation**: CURRENT DESIGN IS INTENTIONAL
+- Pure ONNX approach is explicit design goal
+- Consider adding fallback only if ONNX prediction fails
+- Monitor production accuracy vs Java multi-strategy system
+
+**Assessment**: This is not a bug but an intentional architectural simplification. The Kotlin version replaced the complex multi-strategy orchestration with a single unified ONNX neural prediction pipeline. Success depends on ONNX model accuracy matching or exceeding the Java hybrid system.
+
+---
+
+## File 63/251: SwipeScorer.java - ARCHITECTURAL DIFFERENCE
+
+**QUALITY**: ⚠️ **ARCHITECTURAL** - Replaced by ONNX confidence scores
+
+**Java Implementation**: Unknown lines (needs reading)
+**Kotlin Implementation**: ❌ **REPLACED** by beam search confidence scoring in OnnxSwipePredictorImpl
+
+### BUG #261 (ARCHITECTURAL): Specialized scoring system replaced by neural confidence
+
+**Impact**: ⚠️ ARCHITECTURAL DESIGN CHOICE
+- Java: Dedicated SwipeScorer for hybrid result ranking
+- Kotlin: ONNX model outputs confidence scores directly
+- Neural confidence may be more accurate than hand-crafted scoring
+
+**Missing**: N/A - Scoring integrated into ONNX model
+
+---
+
+## File 64/251: WordPredictor.java (782 lines) - ARCHITECTURAL DIFFERENCE
+
+**QUALITY**: ⚠️ **ARCHITECTURAL** - Dictionary matching replaced by pure ONNX
+
+**Java Implementation**: 782 lines with dictionary, bigrams, language detection, user adaptation
+**Kotlin Implementation**: ❌ **INTENTIONALLY REPLACED** by pure ONNX neural prediction
+
+### BUG #262 (ARCHITECTURAL): Dictionary-based prediction replaced by neural prediction
+
+**Java Components**:
+- Dictionary management with frequency weights (lines 19-196)
+- Adjacent keys map for QWERTY layout (lines 211-256)
+- BigramModel integration for contextual prediction (lines 22-36)
+- LanguageDetector integration (lines 23, 115-146)
+- UserAdaptationManager integration (lines 30, 54-57, 395-449)
+- Two-pass prioritized matching system (lines 345-524):
+  - PRIORITY: First AND last character match
+  - SECONDARY: Partial endpoint match (first OR last)
+  - OTHER: Standard swipe candidates
+- Prefix-based matching for regular typing (lines 461-478)
+- Swipe-specific scoring with endpoint weights (lines 383-456)
+- Context-aware prediction with bigram reranking (lines 271-325)
+- Edit distance calculation with adjacency consideration (lines 594-632)
+- User frequency adaptation (lines 395-449, 468-474)
+- Language detection and auto-switching (lines 115-130)
+- Recent words tracking for language context (lines 89-110)
+
+**Kotlin Architecture**:
+- OnnxSwipePredictorImpl: Pure neural prediction with ONNX encoder/decoder
+- No dictionary files or frequency weights
+- No language detection or user adaptation
+- Beam search algorithm for candidate generation
+- Vocabulary filtering for valid words
+
+**Impact**: ⚠️ ARCHITECTURAL DESIGN CHOICE
+- ✅ PRO: No need to maintain dictionaries or frequency data
+- ✅ PRO: Neural model learns patterns implicitly
+- ✅ PRO: Simpler codebase (782 lines → 0 lines)
+- ❌ CON: No explicit user adaptation/learning
+- ❌ CON: No multi-language support or detection
+- ❌ CON: No fallback for out-of-vocabulary words
+- ❌ CON: No contextual reranking with bigrams
+- ❌ CON: Cannot add new words without retraining model
+
+**Missing Features**:
+1. Dictionary management (lines 19-196)
+2. Frequency-based ranking (lines 181, 434, 477)
+3. BigramModel contextual prediction (lines 271-325)
+4. LanguageDetector auto-switching (lines 115-130)
+5. UserAdaptationManager frequency learning (lines 395-449)
+6. Adjacent keys adjacency checking (lines 211-256, 637-641)
+7. Edit distance with adjacency consideration (lines 594-632)
+8. Recent words context tracking (lines 89-110)
+9. Manual language detection API (lines 135-138)
+10. Configuration weight system (swipe_first_letter_weight, swipe_last_letter_weight, swipe_endpoint_bonus_weight, swipe_require_endpoints)
+
+**Missing**: 100% (782 lines) - All dictionary/language/adaptation logic
+
+**Recommendation**: EVALUATE PRODUCTION ACCURACY
+- If ONNX accuracy < Java hybrid: Consider adding dictionary fallback
+- Monitor user complaints about missing words or language issues
+- Consider implementing UserAdaptationManager separately for frequency learning
+
+**Assessment**: This is the most significant architectural difference. The Java version has a sophisticated 782-line prediction engine with dictionaries, language detection, bigrams, and user adaptation. The Kotlin version relies entirely on the ONNX neural model. This is a high-risk simplification that depends completely on model quality.
+
+---
+
+## File 65/251: UserAdaptationManager.java - NEEDS READING
+
+### BUG #263 (UNKNOWN): User learning system status unknown
+
+**Needs**: Read UserAdaptationManager.java to assess implementation
+**Impact**: UNKNOWN - User frequency learning may be missing
+
+---
+
+**Total Architectural Differences: 4**
+1. SwipeTypingEngine (Bug #260) - Multi-strategy orchestration → Pure ONNX
+2. SwipeScorer (Bug #261) - Hybrid scoring → Neural confidence
+3. WordPredictor (Bug #262) - Dictionary/language/adaptation → Pure ONNX
+4. UserAdaptationManager (Bug #263) - Status unknown
+
+**CRITICAL ASSESSMENT**: The Kotlin rewrite made a fundamental architectural bet:
+- **Java**: Multi-strategy hybrid (CGR + dictionary + bigrams + scoring + user learning)
+- **Kotlin**: Pure ONNX neural prediction (single strategy, no fallbacks)
+
+This is **HIGH RISK** because:
+1. No fallback if ONNX fails or has low accuracy
+2. No user adaptation/learning over time
+3. No multi-language support
+4. Cannot add new words without model retraining
+5. Success depends entirely on ONNX model quality
+
+**Recommendation**: Monitor production metrics closely:
+- If ONNX accuracy ≥ Java hybrid: Architecture is validated
+- If ONNX accuracy < Java hybrid: Consider adding fallback strategies
 

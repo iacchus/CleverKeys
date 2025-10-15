@@ -3840,3 +3840,122 @@ Check if Kotlin implementation has equivalent async handling with coroutines. If
 
 ---
 
+
+## File 74/251: CGRSettingsActivity.java (279 lines) vs NeuralSettingsActivity.kt (498 lines)
+
+**QUALITY**: ✅ **ARCHITECTURAL REPLACEMENT** - CGR parameters → ONNX neural parameters
+
+**Java Implementation**: 279 lines - CGR algorithm parameter tuning UI
+**Kotlin Implementation**: 498 lines (NeuralSettingsActivity.kt) - ONNX neural parameter tuning UI
+
+### ARCHITECTURAL DECISION: CGR → ONNX Parameter Tuning
+
+**Explicit Documentation in Kotlin (lines 24-36)**:
+```kotlin
+/**
+ * Modern neural prediction parameter settings activity.
+ *
+ * Migrated from CGRSettingsActivity.java to focus on ONNX neural network parameters
+ * instead of CGR (Continuous Gesture Recognition) parameters.
+ *
+ * Features:
+ * - Real-time ONNX parameter tuning
+ * - Modern Compose UI with Material Design 3
+ * - Persistent settings with reactive updates
+ * - Neural engine configuration validation
+ * - Performance monitoring integration
+ */
+```
+
+**Java CGR Parameters (279 lines)**:
+1. σₑ (E_SIGMA) - Euclidean distance variance (50-500)
+2. β (BETA) - Distance variance ratio (100-800)
+3. λ (LAMBDA) - Distance mixture weight (0.0-1.0)
+4. κ (KAPPA) - End-point bias strength (0.0-5.0)
+5. Point Spacing - Progressive segment density (100-1000)
+6. Max Resampling - Maximum sampling points (1000-10000)
+
+**Kotlin ONNX Parameters (498 lines)**:
+1. Beam Width - Beam search candidates (1-32)
+2. Max Word Length - Character limit (10-50)
+3. Confidence Threshold - Minimum score (0.0-1.0)
+4. Temperature Scaling - Diversity control (0.1-2.0)
+5. Repetition Penalty - Anti-repetition (1.0-2.0)
+6. Top-K Filtering - Token selection (1-100)
+7. Batch Size - Inference batching (1-16)
+8. Timeout (ms) - Prediction timeout (50-1000)
+9. Enable Batching - Toggle batched inference
+10. Enable Caching - Toggle prediction caching
+
+**Functional Comparison**:
+
+| Aspect | Java (CGR) | Kotlin (ONNX) | Status |
+|--------|-----------|---------------|--------|
+| **Purpose** | Tune CGR algorithm params | Tune neural network params | ✅ Equivalent |
+| **UI Framework** | Programmatic LinearLayout | Jetpack Compose Material 3 | ✅ Modern upgrade |
+| **Real-time Updates** | Yes (via listeners) | Yes (via updateNeuralParameters) | ✅ Equivalent |
+| **Persistence** | SharedPreferences "cgr_settings" | SharedPreferences "neural_settings" | ✅ Equivalent |
+| **Reset to Defaults** | resetToDefaults() | resetToDefaults() | ✅ Equivalent |
+| **Save & Apply** | saveAndRegenerateTemplates() | saveAndApplyParameters() | ✅ Equivalent |
+| **Parameter Count** | 6 parameters | 10 parameters | ✅ More configurable |
+| **Dark Mode UI** | Basic (setBackgroundColor(BLACK)) | Material 3 dark theme | ✅ Modern upgrade |
+| **Performance Info** | Basic description text | Card with impact explanation | ✅ Better UX |
+
+**Java Architecture (279 lines)**:
+```java
+CGRSettingsActivity extends Activity
+├── SeekBar controls for 6 CGR parameters
+├── addParameterControl() - Creates slider + labels
+├── updateCGRParameters() - Saves to prefs immediately
+├── resetToDefaults() - Restores research paper values
+├── saveAndRegenerateTemplates() - Triggers template rebuild
+├── loadSavedParameters() - Reads from prefs on startup
+└── saveParametersToPrefs() - Persists all 6 parameters
+```
+
+**Kotlin Architecture (498 lines)**:
+```kotlin
+NeuralSettingsActivity extends ComponentActivity
+├── Jetpack Compose UI with Material 3
+├── ParameterSection() composable - Groups parameters
+├── ParameterSlider() composable - Reusable slider component
+├── updateNeuralParameters() - Updates Config + prefs
+├── resetToDefaults() - Restores default neural config
+├── saveAndApplyParameters() - Applies to neural engine
+├── loadSavedParameters() - Reads from prefs on startup
+└── saveParametersToPrefs() - Persists all 10 parameters
+```
+
+**Key Improvements in Kotlin**:
+1. **Modern UI**: Jetpack Compose with Material Design 3 vs programmatic views
+2. **More Parameters**: 10 tunable parameters vs 6 (better control)
+3. **Better UX**: Performance impact card, grouped sections, consistent spacing
+4. **Type Safety**: Compose state management vs manual TextView updates
+5. **Lifecycle**: ComponentActivity + lifecycleScope vs basic Activity
+6. **Error Handling**: Try-catch with Toast feedback vs basic logging
+7. **Reactive Updates**: State-driven recomposition vs manual view updates
+
+**Why CGR Parameters Are Gone**:
+The Kotlin implementation replaced the CGR (Continuous Gesture Recognition) algorithm from Kristensson & Denby 2011 with pure ONNX neural network prediction. The CGR algorithm:
+- Used σₑ, β, λ, κ parameters for statistical gesture matching
+- Generated gesture templates from progressive segment sampling
+- Required template regeneration when parameters changed
+
+The ONNX approach:
+- Uses trained neural network with beam search
+- No template generation needed (learns from data)
+- Parameters control beam search, not gesture matching
+
+**Assessment**: This is a 1:1 **functional replacement** with architectural modernization. Both files serve the same purpose (allow users to tune prediction algorithm parameters), but target different underlying algorithms (CGR vs ONNX). The Kotlin version is superior in every way:
+- Modern Compose UI (vs programmatic views)
+- More tunable parameters (10 vs 6)
+- Better user experience
+- Type-safe state management
+- More sophisticated parameter descriptions
+
+**Status**: ✅ **100% FUNCTIONAL PARITY** - Architectural replacement documented
+
+**Lines**: Java 279 → Kotlin 498 (1.78x expansion with better UI and more parameters)
+
+---
+

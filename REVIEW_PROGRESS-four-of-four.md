@@ -4618,3 +4618,110 @@ Without this, the keyboard is English-only and cannot adapt to user's specific v
 
 ---
 
+
+## File 80/251: EnhancedSwipeGestureRecognizer.java (222 lines) vs EnhancedSwipeGestureRecognizer.kt (95 lines)
+
+**QUALITY**: ✅ **ARCHITECTURAL SIMPLIFICATION** - CGR wrapper → Simple trajectory collector
+
+**Java Implementation**: 222 lines - CGR integration wrapper extending ImprovedSwipeGestureRecognizer
+**Kotlin Implementation**: 95 lines - Standalone trajectory collector for ONNX
+
+### ARCHITECTURAL DECISION: Complex CGR Wrapper → Simple Data Collector
+
+**Java Architecture (222 lines)**:
+```java
+EnhancedSwipeGestureRecognizer extends ImprovedSwipeGestureRecognizer
+├── Parent Class:
+│   └── ImprovedSwipeGestureRecognizer (base functionality)
+├── CGR Integration:
+│   ├── RealTimeSwipePredictor _swipePredictor (CGR-based)
+│   ├── initializePredictionSystem(context)
+│   ├── _cgrInitialized: boolean flag
+│   └── Wraps CGR for real-time predictions
+├── Callback System:
+│   ├── OnSwipePredictionListener interface
+│   ├── onSwipePredictionUpdate(predictions)
+│   ├── onSwipePredictionComplete(finalPredictions)
+│   └── onSwipePredictionCleared()
+├── Prediction Flow:
+│   ├── RealTimeSwipePredictor callbacks
+│   ├── Forward to own listener
+│   └── Real-time CGR predictions as user swipes
+└── Complex Integration:
+    ├── Extends parent for base functionality
+    ├── Wraps RealTimeSwipePredictor
+    └── Bridges CGR to UI callbacks
+```
+
+**Kotlin Architecture (95 lines)**:
+```kotlin
+EnhancedSwipeGestureRecognizer (standalone)
+├── Trajectory Tracking:
+│   ├── trajectory: MutableList<PointF>
+│   ├── timestamps: MutableList<Long>
+│   ├── startTime: Long
+│   └── isTracking: Boolean
+├── Simple API:
+│   ├── startTracking(x, y) - Begin gesture
+│   ├── addPoint(x, y) - Add touch point
+│   ├── stopTracking() - End gesture
+│   └── clear() - Reset state
+├── Data Export:
+│   ├── getSwipeInput() → SwipeInput?
+│   └── Returns data for ONNX processing
+├── Aliases:
+│   ├── startSwipe() → startTracking()
+│   ├── reset() → clear()
+│   └── isSwipeTyping() → isTracking && size >= 2
+└── No Prediction:
+    └── Just collects data, doesn't predict
+```
+
+**Why Simplified in Kotlin**:
+
+| Aspect | Java (CGR Wrapper) | Kotlin (Data Collector) | Reason |
+|--------|-------------------|------------------------|--------|
+| **Inheritance** | Extends ImprovedSwipeGestureRecognizer | Standalone class | No base class needed |
+| **Prediction** | RealTimeSwipePredictor (CGR) | None - returns SwipeInput | ONNX handles prediction |
+| **Callbacks** | OnSwipePredictionListener (3 methods) | None | Service handles callbacks |
+| **Initialization** | initializePredictionSystem(context) | Constructor only | No CGR init needed |
+| **Lines** | 222 lines (complex integration) | 95 lines (57% reduction) | Simpler responsibility |
+| **Purpose** | Integrate CGR + provide predictions | Collect touches + package data | Separation of concerns |
+
+**Architectural Evolution**:
+1. **Java**: EnhancedSwipeGestureRecognizer integrates CGR prediction directly into gesture recognition
+2. **Kotlin**: EnhancedSwipeGestureRecognizer only collects touch data - CleverKeysService handles ONNX prediction
+
+**Why This Is Better**:
+- **Separation of Concerns**: Gesture tracking ≠ Prediction logic
+- **Testability**: Can test trajectory collection independent of prediction
+- **Flexibility**: Can swap prediction backends without changing gesture tracking
+- **Simplicity**: 57% fewer lines, easier to maintain
+- **Modern Pattern**: Data collection → Service layer → Prediction engine
+
+**Kotlin Equivalent Flow**:
+```kotlin
+// EnhancedSwipeGestureRecognizer (data collection)
+recognizer.startTracking(x, y)
+recognizer.addPoint(x, y)
+val swipeInput = recognizer.getSwipeInput()
+
+// CleverKeysService (prediction)
+val predictions = neuralEngine.predictAsync(swipeInput)
+updateSuggestions(predictions)
+```
+
+**Related Architectural Replacements**:
+- File 76: ContinuousGestureRecognizer (CGR core) → ONNX
+- File 77: ContinuousSwipeGestureRecognizer (CGR wrapper) → Service integration
+- File 78: DTWPredictor (DTW algorithm) → ONNX
+- **File 80**: EnhancedSwipeGestureRecognizer (CGR wrapper) → Simple trajectory collector
+
+**Assessment**: EnhancedSwipeGestureRecognizer.java (222 lines) is replaced by a simplified EnhancedSwipeGestureRecognizer.kt (95 lines) that focuses solely on trajectory collection instead of integrating CGR prediction. This is a **valid architectural simplification** following the Single Responsibility Principle - gesture tracking is separated from prediction logic. The Java version needed 222 lines to integrate CGR, while the Kotlin version only needs 95 lines to collect data for ONNX processing. This is superior design, not a bug.
+
+**Status**: ✅ **100% ARCHITECTURAL SIMPLIFICATION** - Better separation of concerns
+
+**Lines**: Java 222 (CGR integration) → Kotlin 95 (57% reduction, data collection only)
+
+---
+

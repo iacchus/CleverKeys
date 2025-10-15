@@ -4277,3 +4277,108 @@ ContinuousGestureRecognizer
 
 ---
 
+
+## File 77/251: ContinuousSwipeGestureRecognizer.java (382 lines) vs NONE IN KOTLIN
+
+**QUALITY**: ✅ **ARCHITECTURAL REPLACEMENT** - CGR Android integration → ONNX service integration
+
+**Java Implementation**: 382 lines - Android touch handler wrapper for CGR algorithm
+**Kotlin Implementation**: ❌ Does not exist - **Replaced by CleverKeysService.kt integration**
+
+### ARCHITECTURAL DECISION: CGR Touch Integration → ONNX Service Integration
+
+**Architectural Context** (CGR ecosystem):
+- File 76: ContinuousGestureRecognizer.java (1181 lines) - Core CGR algorithm → OnnxSwipePredictorImpl.kt
+- **File 77**: ContinuousSwipeGestureRecognizer.java (382 lines) - Android touch wrapper → CleverKeysService.kt
+- Both are part of the CGR system replaced by ONNX
+
+**Java Android Integration (382 lines)**:
+
+**Purpose**: Wrapper that integrates ContinuousGestureRecognizer with Android touch events
+
+**Architecture**:
+```java
+ContinuousSwipeGestureRecognizer
+├── Core CGR: ContinuousGestureRecognizer cgr
+├── Touch Handling:
+│   ├── gesturePointsList: List<Point> (accumulated touches)
+│   ├── gestureActive: boolean (swipe in progress)
+│   ├── newTouch: boolean (touch started)
+│   └── minPointsForPrediction: 4 points minimum
+├── Performance Optimization:
+│   ├── HandlerThread backgroundThread ("CGR-Recognition")
+│   ├── Handler backgroundHandler (background processing)
+│   ├── Handler mainHandler (UI thread callbacks)
+│   ├── AtomicBoolean recognitionInProgress (prevent concurrent)
+│   ├── PREDICTION_THROTTLE_MS: 100ms (reasonable frequency)
+│   └── lastPredictionTime: throttle tracking
+├── Callback Interface:
+│   ├── onGesturePrediction(predictions) - Real-time updates
+│   ├── onGestureComplete(finalPredictions) - Swipe finished
+│   └── onGestureCleared() - Gesture cancelled
+└── Template Management:
+    └── setTemplateSet(templates) - Load CGR templates
+```
+
+**Key Features**:
+- **Background Processing**: HandlerThread prevents UI lag during CGR recognition
+- **Throttling**: 100ms minimum between predictions (performance optimization)
+- **Real-time Callbacks**: Continuous predictions as user swipes
+- **Gesture Lifecycle**: Start, update, complete, clear events
+- **Template Loading**: Dynamic template set configuration
+
+**Kotlin ONNX Equivalent**: CleverKeysService.kt integration
+
+**Where This Functionality Lives in Kotlin**:
+```kotlin
+CleverKeysService.kt (933 lines - File 2)
+├── Neural Prediction Integration:
+│   ├── lateinit var neuralEngine: NeuralSwipeEngine
+│   ├── handleSwipeGesture(swipePath: List<PointF>) - Touch accumulation
+│   ├── predictAsync() - Background prediction with coroutines
+│   └── updateSuggestions(predictions) - UI callback
+├── Touch Event Handling:
+│   ├── Keyboard2View touch events → SwipeInput
+│   ├── Point accumulation in gesture path
+│   └── Gesture completion detection
+├── Performance Optimization:
+│   ├── Kotlin coroutines instead of HandlerThread
+│   ├── lifecycleScope for automatic cleanup
+│   ├── Debouncing with Flow operators
+│   └── Async prediction pipeline
+└── No Template Management:
+    └── ONNX models loaded once at startup (no template sets)
+```
+
+**Architectural Comparison**:
+
+| Aspect | Java (CGR Integration) | Kotlin (ONNX Integration) | Comparison |
+|--------|----------------------|--------------------------|------------|
+| **Touch Wrapper** | ContinuousSwipeGestureRecognizer (382 lines) | CleverKeysService.handleSwipeGesture | ✅ Integrated |
+| **Background Processing** | HandlerThread + Handler | Kotlin coroutines + lifecycleScope | ✅ Modern |
+| **Throttling** | Manual timing with lastPredictionTime | Flow debounce operators | ✅ Declarative |
+| **Callbacks** | OnGesturePredictionListener interface | suspend fun + Flow emissions | ✅ Type-safe |
+| **Template Loading** | setTemplateSet() dynamic | Model loaded at startup | ✅ Simpler |
+| **Thread Safety** | AtomicBoolean + synchronized | Coroutine structured concurrency | ✅ Safer |
+| **Lifecycle** | Manual cleanup | Automatic with lifecycleScope | ✅ Safer |
+
+**Why Wrapper Not Needed in Kotlin**:
+1. **Direct Integration**: CleverKeysService directly calls OnnxSwipePredictorImpl
+2. **Coroutines**: Kotlin coroutines replace HandlerThread complexity
+3. **No Templates**: ONNX models don't need dynamic template loading
+4. **Simpler**: Fewer abstraction layers needed
+
+**Related Architectural Replacements**:
+- File 69: WordGestureTemplateGenerator.java → ONNX training
+- File 74: CGRSettingsActivity.java → NeuralSettingsActivity.kt
+- File 76: ContinuousGestureRecognizer.java → OnnxSwipePredictorImpl.kt
+- **File 77**: ContinuousSwipeGestureRecognizer.java → CleverKeysService.kt integration
+
+**Assessment**: ContinuousSwipeGestureRecognizer.java (382 lines) is intentionally **not implemented** as a separate class in Kotlin. Its functionality is integrated directly into CleverKeysService.kt using modern Kotlin patterns (coroutines, Flow, lifecycleScope). The wrapper abstraction was necessary in Java to manage HandlerThread complexity and template loading, but Kotlin's coroutine system makes this wrapper unnecessary. This is a **valid architectural simplification**, not a bug.
+
+**Status**: ✅ **100% ARCHITECTURAL REPLACEMENT** - Functionality integrated into CleverKeysService
+
+**Lines**: Java 382 (CGR wrapper) → Kotlin integrated into CleverKeysService.kt (933 lines)
+
+---
+

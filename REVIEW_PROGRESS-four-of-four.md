@@ -3329,3 +3329,315 @@ This is **HIGH RISK** because:
   - Architectural: ~10 (intentional design changes)
 - **Architectural Changes Documented**: CGR→ONNX transition, multi-strategy→single-strategy
 
+---
+
+## File 70/251: SwipeMLData.java (295 lines) vs SwipeMLData.kt (151 lines)
+
+**QUALITY**: ⚠️ **49% MISSING** - Missing validation, statistics, duplicate detection
+
+**Java Implementation**: 295 lines - Complete ML data model with validation & statistics
+**Kotlin Implementation**: 151 lines - Basic data capture, missing quality checks
+
+**LINE-BY-LINE COMPARISON**:
+
+### Java Fields (lines 32-41) vs Kotlin Properties (lines 15-24)
+✓ `traceId` - PRESENT (Kotlin line 15)
+✓ `targetWord` - PRESENT (Kotlin line 16)
+✓ `timestampUtc` - PRESENT (Kotlin line 17)
+✓ `screenWidthPx` - PRESENT (Kotlin line 18)
+✓ `screenHeightPx` - PRESENT (Kotlin line 19)
+✓ `keyboardHeightPx` - PRESENT (Kotlin line 20)
+✓ `collectionSource` - PRESENT (Kotlin line 21)
+✓ `tracePoints` - PRESENT (Kotlin line 22)
+✓ `registeredKeys` - PRESENT (Kotlin line 23)
+✓ `keyboardOffsetY` - PRESENT (Kotlin line 24)
+
+### Java Constructors vs Kotlin Constructors
+✓ **Constructor for new data (Java lines 44-56)**: Kotlin data class primary constructor equivalent
+✓ **JSON constructor (Java lines 59-91)**: Kotlin fromJson() companion function (lines 114-149)
+
+### BUG #270 (HIGH): addRawPoint() incorrect time delta calculation
+
+**Java Implementation (lines 96-117)**:
+```java
+public void addRawPoint(float rawX, float rawY, long timestamp)
+{
+  // Normalize coordinates to [0, 1] range
+  float normalizedX = rawX / screenWidthPx;
+  float normalizedY = rawY / screenHeightPx;
+
+  // Calculate time delta from previous point (0 for first point)
+  long deltaMs = 0;
+  if (!tracePoints.isEmpty())
+  {
+    // Sum up previous deltas to get absolute time, then calculate new delta
+    long lastAbsoluteTime = 0;
+    for (int i = 0; i < tracePoints.size() - 1; i++)
+    {
+      lastAbsoluteTime += tracePoints.get(i).tDeltaMs;
+    }
+    deltaMs = timestamp - (timestampUtc + lastAbsoluteTime);
+  }
+
+  tracePoints.add(new TracePoint(normalizedX, normalizedY, deltaMs));
+}
+```
+
+**Kotlin Implementation (lines 39-48)** - BUGGY:
+```kotlin
+fun addRawPoint(rawX: Float, rawY: Float, timestamp: Long) {
+    val normalizedX = rawX / screenWidthPx
+    val normalizedY = rawY / screenHeightPx  // CORRECT - matches Java line 100
+
+    // Calculate time delta from first point
+    val tDeltaMs = if (tracePoints.isEmpty()) 0L
+    else timestamp - (timestampUtc - tracePoints.first().tDeltaMs)  // BUG: Wrong formula
+
+    tracePoints.add(TracePoint(normalizedX, normalizedY, tDeltaMs))
+}
+```
+
+**ISSUE**: Kotlin calculates time delta incorrectly
+- Java: Sums all previous deltas to get absolute time, then `timestamp - (timestampUtc + lastAbsoluteTime)`
+- Kotlin: Uses confusing formula `timestamp - (timestampUtc - tracePoints.first().tDeltaMs)` which doesn't match
+- Should iterate through tracePoints to sum deltas like Java does (lines 109-111)
+
+**Impact**: HIGH - Time features for ML training will be incorrect, affecting model accuracy
+
+### BUG #271 (HIGH): addRegisteredKey() doesn't avoid consecutive duplicates
+
+**Java Implementation (lines 122-129)**:
+```java
+public void addRegisteredKey(String key)
+{
+  // Avoid consecutive duplicates
+  if (registeredKeys.isEmpty() || !registeredKeys.get(registeredKeys.size() - 1).equals(key))
+  {
+    registeredKeys.add(key.toLowerCase());
+  }
+}
+```
+
+**Kotlin Implementation (lines 53-57)** - MISSING DUPLICATE CHECK:
+```kotlin
+fun addRegisteredKey(key: String) {
+    if (key.isNotBlank()) {
+        registeredKeys.add(key)  // BUG: Always adds, no duplicate check
+    }
+}
+```
+
+**ISSUE**: Kotlin always adds keys without checking if last key is duplicate
+- Java checks: `registeredKeys.isEmpty() || !registeredKeys.get(registeredKeys.size() - 1).equals(key)`
+- Kotlin: Only checks if blank, not if duplicate
+- Also missing: `.toLowerCase()` normalization
+
+**Impact**: HIGH - Duplicate keys pollute training data, reducing model quality
+
+### BUG #272 (LOW): TracePoint comment incorrect
+
+**Java TracePoint (lines 260-272)**:
+```java
+public static class TracePoint
+{
+  public final float x;       // Normalized [0, 1]
+  public final float y;       // Normalized [0, 1]
+  public final long tDeltaMs; // Time delta from previous point  ← CORRECT
+
+  public TracePoint(float x, float y, long tDeltaMs) { ... }
+}
+```
+
+**Kotlin TracePoint (lines 30-34)**:
+```kotlin
+data class TracePoint(
+    val x: Float, // Normalized [0, 1]
+    val y: Float, // Normalized [0, 1]
+    val tDeltaMs: Long // Time delta from gesture start  ← WRONG COMMENT
+)
+```
+
+**ISSUE**: Kotlin comment says "from gesture start" but should be "from previous point"
+- Java explicitly states: "Time delta from previous point" (line 264)
+- Kotlin incorrectly states: "Time delta from gesture start" (line 33)
+
+**Impact**: LOW - Misleading documentation but doesn't affect functionality
+
+### MISSING METHOD #1: setKeyboardDimensions() (Java lines 134-139)
+
+**Java Implementation**:
+```java
+public void setKeyboardDimensions(int screenWidth, int keyboardHeight, int keyboardOffsetY)
+{
+  this.keyboardOffsetY = keyboardOffsetY;
+  // Note: screenWidth and keyboardHeight are already set in constructor
+  // This method mainly records the Y offset for position normalization
+}
+```
+
+**Kotlin Implementation**: ❌ **COMPLETELY MISSING**
+
+**Impact**: MEDIUM - Cannot update keyboard offset after construction
+- Needed when keyboard dimensions change (rotation, screen resize)
+- keyboardOffsetY affects coordinate normalization
+
+### MISSING METHOD #2: isValid() (Java lines 186-208) - 23 LINES
+
+**Java Implementation**:
+```java
+public boolean isValid()
+{
+  // Must have at least 2 points for a valid swipe
+  if (tracePoints.size() < 2)
+    return false;
+
+  // Must have at least 2 registered keys
+  if (registeredKeys.size() < 2)
+    return false;
+
+  // Target word must not be empty
+  if (targetWord == null || targetWord.isEmpty())
+    return false;
+
+  // Check for reasonable normalized values
+  for (TracePoint point : tracePoints)
+  {
+    if (point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1)
+      return false;
+  }
+
+  return true;
+}
+```
+
+**Kotlin Implementation**: ❌ **COMPLETELY MISSING**
+
+**Impact**: HIGH - No data quality validation before storage
+- Cannot detect invalid swipes (too short, empty, out of bounds)
+- Bad data will corrupt ML training dataset
+- Java checks: ≥2 points, ≥2 keys, non-empty word, normalized coordinates in [0,1]
+
+### MISSING METHOD #3: calculateStatistics() (Java lines 213-247) - 35 LINES
+
+**Java Implementation**:
+```java
+public SwipeStatistics calculateStatistics()
+{
+  if (tracePoints.size() < 2)
+    return null;
+
+  float totalDistance = 0;
+  long totalTime = 0;
+
+  for (int i = 1; i < tracePoints.size(); i++)
+  {
+    TracePoint prev = tracePoints.get(i - 1);
+    TracePoint curr = tracePoints.get(i);
+
+    float dx = curr.x - prev.x;
+    float dy = curr.y - prev.y;
+    totalDistance += Math.sqrt(dx * dx + dy * dy);
+    totalTime += curr.tDeltaMs;
+  }
+
+  // Calculate straightness ratio
+  TracePoint start = tracePoints.get(0);
+  TracePoint end = tracePoints.get(tracePoints.size() - 1);
+  float directDistance = (float)Math.sqrt(
+    Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)
+  );
+  float straightnessRatio = totalDistance > 0 ? directDistance / totalDistance : 0;
+
+  return new SwipeStatistics(
+    tracePoints.size(),
+    totalDistance,
+    totalTime,
+    straightnessRatio,
+    registeredKeys.size()
+  );
+}
+```
+
+**Kotlin Implementation**: ⚠️ **PARTIALLY PRESENT** as lazy properties (lines 93-108)
+- ✓ `pathLength` - PRESENT (line 93)
+- ✓ `duration` - PRESENT (line 101) but in seconds, Java uses ms
+- ✓ `averageVelocity` - PRESENT (line 106)
+- ❌ `pointCount` - MISSING (could use tracePoints.size)
+- ❌ `straightnessRatio` - MISSING (key quality metric)
+- ❌ `keyCount` - MISSING (could use registeredKeys.size)
+
+**Impact**: MEDIUM - Limited statistical analysis for data quality assessment
+- Cannot analyze gesture straightness (detects wild swipes vs clean swipes)
+- Missing SwipeStatistics return type for structured data
+
+### MISSING CLASS: SwipeStatistics (Java lines 277-294) - 18 LINES
+
+**Java Implementation**:
+```java
+public static class SwipeStatistics
+{
+  public final int pointCount;
+  public final float totalDistance;
+  public final long totalTimeMs;
+  public final float straightnessRatio;
+  public final int keyCount;
+
+  public SwipeStatistics(int pointCount, float totalDistance, long totalTimeMs,
+                         float straightnessRatio, int keyCount)
+  {
+    this.pointCount = pointCount;
+    this.totalDistance = totalDistance;
+    this.totalTimeMs = totalTimeMs;
+    this.straightnessRatio = straightnessRatio;
+    this.keyCount = keyCount;
+  }
+}
+```
+
+**Kotlin Implementation**: ❌ **COMPLETELY MISSING**
+
+**Impact**: MEDIUM - No structured statistics data class
+- Kotlin has individual lazy properties instead of cohesive data class
+- Missing straightnessRatio (important quality metric)
+
+### Java Getters (lines 250-255) vs Kotlin Properties
+✓ All present as public properties in Kotlin data class
+
+**MISSING FUNCTIONALITY SUMMARY**:
+```
+Total Lines: Java 295 → Kotlin 151 (144 lines missing = 49%)
+
+Missing Methods:
+1. setKeyboardDimensions() - 6 lines
+2. isValid() - 23 lines
+3. calculateStatistics() - 35 lines (partially replaced by lazy properties)
+
+Missing Classes:
+4. SwipeStatistics inner class - 18 lines
+
+Missing Statistics:
+- straightnessRatio (key quality metric)
+- pointCount (available as tracePoints.size)
+- keyCount (available as registeredKeys.size)
+
+Bugs:
+- Bug #270: addRawPoint() time delta calculation wrong
+- Bug #271: addRegisteredKey() doesn't filter consecutive duplicates
+- Bug #272: TracePoint comment says "from gesture start" not "from previous point"
+```
+
+**Related Components**:
+- SwipeMLDataStore.java - Uses isValid() to filter data before storage
+- SwipeMLTrainer.java - Uses calculateStatistics() for data analysis
+
+**Recommendation**: HIGH PRIORITY
+- **FIX**: Bug #270 (time delta) - CRITICAL for ML training accuracy
+- **FIX**: Bug #271 (duplicate keys) - HIGH for data quality
+- **ADD**: isValid() method - ESSENTIAL for data quality
+- **ADD**: calculateStatistics() with straightnessRatio - IMPORTANT for analysis
+- **ADD**: SwipeStatistics data class - USEFUL for structured data
+
+**Assessment**: SwipeMLData.kt is functional for basic data capture but missing critical validation and quality analysis features. The time delta bug (#270) will cause incorrect temporal features in training data, potentially degrading model accuracy. The missing isValid() method means bad data can pollute the training dataset.
+
+---
+

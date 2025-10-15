@@ -4157,3 +4157,123 @@ Without this, the system lacks the ability to understand WHY certain swipes work
 
 ---
 
+
+## File 76/251: ContinuousGestureRecognizer.java (1181 lines) vs NONE IN KOTLIN
+
+**QUALITY**: ✅ **ARCHITECTURAL REPLACEMENT** - CGR algorithm → ONNX neural prediction
+
+**Java Implementation**: 1181 lines - Complete CGR library (Kristensson & Denby 2011)
+**Kotlin Implementation**: ❌ Does not exist - **Replaced by OnnxSwipePredictorImpl.kt**
+
+### ARCHITECTURAL DECISION: CGR Algorithm Replaced by ONNX Neural Network
+
+**Explicit Architectural Context** (from File 74 review):
+- NeuralSettingsActivity.kt header (lines 24-36): "Migrated from CGRSettingsActivity.java to focus on ONNX neural network parameters instead of CGR (Continuous Gesture Recognition) parameters."
+- File 69: WordGestureTemplateGenerator.java (template generation for CGR) → replaced by ONNX training
+- File 74: CGRSettingsActivity.java (CGR parameter tuning) → NeuralSettingsActivity.kt (ONNX parameter tuning)
+- **File 76**: ContinuousGestureRecognizer.java (CGR algorithm core) → OnnxSwipePredictorImpl.kt (ONNX inference)
+
+**Java CGR Implementation (1181 lines)**:
+
+**Research Foundation**:
+```java
+/**
+ * Continuous Gesture Recognizer Library (CGR)
+ *
+ * Port of the CGR library from Lua to Java
+ *
+ * If you use this code for your research then please remember to cite our paper:
+ *
+ * Kristensson, P.O. and Denby, L.C. 2011. Continuous recognition and visualization
+ * of pen strokes and touch-screen gestures. In Procceedings of the 8th Eurographics
+ * Symposium on Sketch-Based Interfaces and Modeling (SBIM 2011). ACM Press: 95-102.
+ *
+ * Copyright (C) 2011 by Per Ola Kristensson, University of St Andrews, UK.
+ */
+```
+
+**Configurable CGR Parameters** (lines 36-50):
+```java
+double currentESigma = 120.0;      // Euclidean distance variance
+double currentBeta = 400.0;         // Distance variance ratio
+double currentLambda = 0.65;        // Euclidean weight (higher for keyboards)
+double currentKappa = 2.5;          // End-point bias (higher for specific keys)
+double currentLengthFilter = 0.70;  // Length similarity threshold
+
+int MAX_RESAMPLING_PTS = 5000;     // Support long words like 'wonderful'
+int SAMPLE_POINT_DISTANCE = 10;     // Original value for accuracy
+```
+
+**Core Architecture**:
+```java
+ContinuousGestureRecognizer
+├── Pattern Management
+│   ├── patterns: List<Pattern>
+│   ├── patternPartitions: List<List<Pattern>> (for parallel processing)
+│   └── addPattern(name, points, metadata)
+├── Parallel Processing
+│   ├── THREAD_COUNT: 4 threads (conservative 1x CPU cores)
+│   ├── ExecutorService with thread pool
+│   └── Permanent pattern partitioning
+├── Recognition Pipeline
+│   ├── recognize(inputPoints) → List<RecognitionResult>
+│   ├── normalizePoints() - Transform to 1000×1000 space
+│   ├── resamplePath() - Progressive segment sampling
+│   └── calculateMatchScore() - CGR distance metric
+├── CGR Distance Calculation
+│   ├── Euclidean distance component (eSigma)
+│   ├── Turning angle component (beta, lambda)
+│   ├── End-point bias (kappa)
+│   └── Length filtering (currentLengthFilter)
+├── Data Structures
+│   ├── Point class (x, y)
+│   ├── Pattern class (name, points, metadata)
+│   ├── RecognitionResult class (name, score, confidence)
+│   └── Rect class (normalized space)
+└── Parameter Configuration
+    └── loadParametersFromPreferences(SharedPreferences)
+```
+
+**Kotlin ONNX Replacement**: OnnxSwipePredictorImpl.kt (1331 lines)
+
+**Architectural Differences**:
+
+| Aspect | Java (CGR) | Kotlin (ONNX) | Comparison |
+|--------|-----------|---------------|------------|
+| **Algorithm** | Statistical template matching (Kristensson & Denby 2011) | Neural network beam search | ✅ Modern ML |
+| **Template Storage** | In-memory patterns list | Learned model weights | ✅ No storage |
+| **Recognition** | Distance calculation (eSigma, beta, lambda, kappa) | ONNX inference (encoder + decoder) | ✅ Learned |
+| **Parallelism** | ExecutorService with 4 threads | Batched tensor operations | ✅ GPU-ready |
+| **Parameters** | 5 CGR parameters | 10+ neural parameters | ✅ More control |
+| **Training** | Template generation from examples | Gradient descent on large dataset | ✅ Scalable |
+| **Accuracy** | Pattern matching with similarity threshold | Probability distribution over vocabulary | ✅ Probabilistic |
+| **Adaptability** | Fixed templates, regenerate to adapt | Model retraining or fine-tuning | ✅ ML-driven |
+
+**Why CGR Was Replaced**:
+1. **Scalability**: CGR requires storing templates for every word. ONNX learns patterns.
+2. **Accuracy**: Neural networks can learn complex non-linear patterns that CGR cannot capture.
+3. **Adaptability**: ONNX models can be retrained/fine-tuned. CGR templates are static.
+4. **Memory**: CGR stores thousands of templates. ONNX uses fixed model size (~12MB).
+5. **Modern ML**: ONNX is the industry standard for on-device inference (used by Google, Facebook, Microsoft).
+
+**Kotlin Equivalent**: OnnxSwipePredictorImpl.kt (File 42 - already reviewed)
+- ✅ Encoder-decoder architecture with ONNX Runtime
+- ✅ Beam search with configurable parameters
+- ✅ Batched inference for performance
+- ✅ Tensor memory management
+- ✅ Confidence scoring and vocabulary filtering
+- ✅ Real-time prediction pipeline
+
+**Assessment**: ContinuousGestureRecognizer.java (1181 lines) is intentionally **not implemented** in Kotlin as part of the architectural decision to replace CGR with ONNX neural prediction. This is a **valid architectural evolution**, not a bug. The CGR algorithm from the 2011 research paper has been superseded by modern deep learning approaches. The Kotlin implementation uses OnnxSwipePredictorImpl.kt (1331 lines) which provides superior accuracy, scalability, and adaptability through neural networks.
+
+**Status**: ✅ **100% ARCHITECTURAL REPLACEMENT** - Not a bug, intentional modernization
+
+**Lines**: Java 1181 (CGR statistical) → Kotlin 1331 (OnnxSwipePredictorImpl.kt - neural)
+
+**Related Files**:
+- File 69: WordGestureTemplateGenerator.java → ONNX training (architectural)
+- File 74: CGRSettingsActivity.java → NeuralSettingsActivity.kt (architectural)
+- File 76: ContinuousGestureRecognizer.java → OnnxSwipePredictorImpl.kt (architectural)
+
+---
+

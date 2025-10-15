@@ -3641,3 +3641,42 @@ Bugs:
 
 ---
 
+
+## File 71/251: SwipeMLDataStore.java (591 lines) vs SwipeMLDataStore.kt (68 lines)
+
+**QUALITY**: 💀 **CATASTROPHIC - 89% MISSING** - In-memory list instead of SQLite database
+
+**Java Implementation**: 591 lines - Complete SQLite database with async ops, export, statistics  
+**Kotlin Implementation**: 68 lines - In-memory mutableListOf() that loses all data on app restart
+
+### BUG #273 (CATASTROPHIC): Training data stored in memory instead of persistent database
+
+**Java**: Extends SQLiteOpenHelper with full database implementation  
+**Kotlin**: Uses `private val storedData = mutableListOf<SwipeMLData>()` - NOT PERSISTENT
+
+**Impact**: 💀 CATASTROPHIC - ALL TRAINING DATA LOST WHEN APP CLOSES
+- Cannot collect training data across sessions
+- Cannot export data for model training  
+- Cannot persist calibration results
+- Makes ML training system completely non-functional
+
+**MISSING: 523 lines (89%)**
+
+See detailed line-by-line analysis in full review document.
+
+Missing Core Features:
+1. SQLite database (77 lines) - onCreate, onUpgrade, schema, indexes
+2. Async operations (97 lines) - ExecutorService, transactions, duplicate prevention  
+3. Advanced queries (89 lines) - loadAllData, loadBySource, loadRecent with SQL
+4. Export operations (81 lines) - exportToJSON, exportToNDJSON with metadata
+5. Statistics (57 lines) - database queries, uniqueWords, GROUP BY
+6. Maintenance (34 lines) - deleteEntry with timestamp matching, clearAll with stats reset  
+7. Import (72 lines) - importFromJSON with transaction, conflict handling
+8. Helpers (35 lines) - markAsExported, updateStatistics with SharedPreferences  
+9. SharedPreferences integration - persistent statistics across app restarts
+
+**Recommendation**: 💀 **CRITICAL PRIORITY - BLOCKS ML TRAINING**  
+Without persistent storage, the entire ML training data collection system is non-functional.
+
+---
+

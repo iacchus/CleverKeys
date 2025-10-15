@@ -2937,3 +2937,60 @@ This is **HIGH RISK** because:
 
 ---
 
+## File 69/251: WordGestureTemplateGenerator.java (406 lines) - ARCHITECTURAL DIFFERENCE
+
+**QUALITY**: ⚠️ **ARCHITECTURAL** - Template generation replaced by ONNX training
+
+**Java Implementation**: 406 lines with template generation from dictionary words
+**Kotlin Implementation**: ❌ **INTENTIONALLY REPLACED** by ONNX model training
+
+### BUG #265 (ARCHITECTURAL): Gesture template generation replaced by neural training
+
+**Java Components**:
+- Dynamic keyboard coordinate mapping (lines 44-122)
+- Dictionary loading with frequency weights (lines 125-192)
+- Template generation from word strings (lines 194-253)
+- Template caching for performance (lines 25-26, 33-34)
+- Uses actual keyboard dimensions for accuracy (lines 44-52)
+- QWERTY layout with proper row offsets (lines 63-122)
+- Integration with KeyboardSwipeRecognizer for CGR matching
+
+**Kotlin Architecture**:
+- ONNX model trained offline on gesture data
+- No runtime template generation
+- Model implicitly learns gesture patterns
+- No dictionary dependency for templates
+
+**Impact**: ⚠️ ARCHITECTURAL DESIGN CHOICE
+- ✅ PRO: No runtime template generation overhead
+- ✅ PRO: Model learns optimal patterns from data
+- ✅ PRO: No need to maintain dictionary files
+- ❌ CON: Cannot add new words without retraining
+- ❌ CON: No dynamic adaptation to keyboard layout changes
+- ❌ CON: No frequency-based template prioritization
+
+**Related Components**:
+- Bug #256: KeyboardSwipeRecognizer (uses templates)
+- Bug #262: WordPredictor (provides dictionary)
+
+**Missing**: N/A - Replaced by offline ONNX training
+
+**Recommendation**: CURRENT DESIGN IS INTENTIONAL
+- Template generation is part of CGR approach
+- ONNX model replaces need for runtime templates
+- Consider offline template generation for model training validation
+
+**Assessment**: WordGestureTemplateGenerator is a key component of the CGR (Character-Gesture Recognition) system that the Kotlin version intentionally removed. The ONNX neural approach doesn't need runtime template generation because patterns are learned during training. This is consistent with the architectural decision to replace CGR with pure ONNX.
+
+---
+
+**REVIEW PROGRESS UPDATE**:
+- **Files Reviewed**: 69/251 (27.5%)
+- **Bugs Found**: 265 total
+  - Catastrophic: ~10 (missing core systems)
+  - High: ~5 (functional regressions)
+  - Medium: ~20 (quality issues)
+  - Low: ~10 (code cleanup)
+  - Architectural: ~10 (intentional design changes)
+- **Architectural Changes Documented**: CGR→ONNX transition, multi-strategy→single-strategy
+

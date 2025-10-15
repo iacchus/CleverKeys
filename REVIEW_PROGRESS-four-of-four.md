@@ -4725,3 +4725,70 @@ updateSuggestions(predictions)
 
 ---
 
+
+## File 81/251: EnhancedWordPredictor.java (582 lines) vs NONE IN KOTLIN
+
+**QUALITY**: ✅ **ARCHITECTURAL REPLACEMENT** - FlorisBoard-inspired algorithm → ONNX neural
+
+**Java Implementation**: 582 lines - Advanced word predictor with Trie, shape matching, and multi-factor scoring
+**Kotlin Implementation**: ❌ Does not exist - **Replaced by OnnxSwipePredictorImpl.kt**
+
+### ARCHITECTURAL DECISION: Multi-Factor Algorithm → ONNX Neural Network
+
+**Java Algorithm (582 lines - FlorisBoard-inspired)**:
+```java
+EnhancedWordPredictor
+├── Data Structures:
+│   ├── _dictionaryRoot: TrieNode (O(log n) lookup)
+│   ├── _adjacentKeys: Map<Char, List<Char>> (keyboard layout)
+│   └── _keyPositions: Map<Char, PointF> (key coordinates)
+├── Multi-Factor Scoring:
+│   ├── SHAPE_WEIGHT: 0.4 (gesture shape similarity)
+│   ├── LOCATION_WEIGHT: 0.3 (key position accuracy)
+│   ├── FREQUENCY_WEIGHT: 0.3 (word frequency)
+│   └── LENGTH_PENALTY: 0.1 (penalize length mismatch)
+├── Algorithms:
+│   ├── Shape-based gesture matching
+│   ├── Location-based scoring (key positions)
+│   ├── Path smoothing (window=3, factor=0.5)
+│   ├── Trie-based dictionary (efficient prefix search)
+│   └── Dynamic programming edit distance
+├── Parameters:
+│   ├── MAX_PREDICTIONS: 10
+│   ├── SAMPLING_POINTS: 50 (gesture resampling)
+│   ├── SMOOTHING_WINDOW: 3
+│   └── SMOOTHING_FACTOR: 0.5
+└── Enhanced Dictionary:
+    ├── loadEnhancedDictionary(language)
+    ├── Tab-separated: word\tfrequency
+    └── Fallback to basic dictionary
+```
+
+**Why Replaced by ONNX**:
+1. **Hand-Tuned Weights**: Shape 0.4, Location 0.3, Frequency 0.3 - manually chosen, not learned
+2. **Fixed Algorithms**: Trie + edit distance + smoothing - rigid, not adaptive
+3. **Multiple Codepaths**: Shape matching + location scoring + frequency = complex maintenance
+4. **No Learning**: Cannot improve from user data
+5. **FlorisBoard Inspiration**: Good ideas but neural networks learn better features automatically
+
+**Kotlin ONNX Equivalent**: OnnxSwipePredictorImpl.kt (1331 lines - File 42)
+- Learns optimal feature combinations from data
+- Single neural network replaces all algorithms
+- Adaptive weights through training
+- Continuous improvement possible
+
+**Related Algorithmic Replacements**:
+- File 58: KeyboardSwipeRecognizer (Bayesian) → ONNX
+- File 76: ContinuousGestureRecognizer (CGR) → ONNX
+- File 78: DTWPredictor (DTW) → ONNX
+- **File 81**: EnhancedWordPredictor (Trie+Shape+Location) → ONNX
+- All replaced by unified neural approach
+
+**Assessment**: EnhancedWordPredictor.java (582 lines) is intentionally not implemented in Kotlin as part of the architectural consolidation of multiple hand-crafted algorithms into a single ONNX neural network. The Java version combines Trie data structures, shape matching, location scoring, and frequency weighting with manually tuned parameters (0.4/0.3/0.3/0.1). ONNX learns these relationships automatically from training data, eliminating the need for manual algorithm design and parameter tuning.
+
+**Status**: ✅ **100% ARCHITECTURAL REPLACEMENT** - Hand-crafted → Learned from data
+
+**Lines**: Java 582 (multi-factor algorithm) → Kotlin 1331 (OnnxSwipePredictorImpl.kt - neural)
+
+---
+

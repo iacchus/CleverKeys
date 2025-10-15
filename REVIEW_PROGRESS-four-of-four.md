@@ -4489,3 +4489,132 @@ DTWPredictor
 
 ---
 
+
+## File 79/251: DictionaryManager.java (166 lines) vs OptimizedVocabularyImpl.kt (238 lines)
+
+**QUALITY**: ⚠️ **PARTIAL IMPLEMENTATION** - Multi-language & user words missing
+
+**Java Implementation**: 166 lines - Multi-language dictionary manager with user words
+**Kotlin Implementation**: 238 lines (OptimizedVocabularyImpl.kt) - Single-language vocabulary loader
+
+### BUG #277 (HIGH): Multi-language support missing - Only English supported
+
+**Java Features (166 lines)**:
+```java
+DictionaryManager
+├── Multi-Language Support:
+│   ├── _predictors: Map<String, WordPredictor> (per-language cache)
+│   ├── setLanguage(languageCode) - Switch active language
+│   ├── _currentLanguage: String tracking
+│   └── Locale.getDefault() fallback
+├── User Dictionary:
+│   ├── _userWords: Set<String> (custom words)
+│   ├── loadUserWords() - From SharedPreferences
+│   ├── addUserWord(word) - Add custom word
+│   ├── removeUserWord(word) - Remove custom word
+│   ├── saveUserWords() - Persist to SharedPreferences
+│   └── USER_DICT_PREFS: "user_dictionary"
+├── Predictor Management:
+│   ├── _currentPredictor: WordPredictor (active)
+│   ├── Lazy loading per language
+│   └── getPredictions(keySequence) with user words
+└── User Word Integration:
+    ├── Prefix matching for user words
+    ├── Add user words at beginning of suggestions
+    └── Limit to 5 predictions total
+```
+
+**Kotlin Implementation (OptimizedVocabularyImpl.kt - 238 lines, File 44)**:
+```kotlin
+OptimizedVocabularyImpl
+├── Single Language Only:
+│   ├── Hardcoded: "en.txt" (English only)
+│   ├── No language switching
+│   └── No multi-language cache
+├── NO User Dictionary:
+│   ├── ❌ No user word storage
+│   ├── ❌ No add/remove methods
+│   ├── ❌ No SharedPreferences persistence
+│   └── ❌ Cannot learn custom words
+├── Vocabulary Loading:
+│   ├── loadVocabularyFromAssets("dictionaries/en.txt")
+│   ├── _vocabulary: List<String> (single list)
+│   ├── _wordToIndex: Map<String, Int>
+│   └── getWordIndex(word) lookup
+└── Filtering Only:
+    ├── filterCandidates(words) - Remove OOV
+    ├── isInVocabulary(word) - Check existence
+    └── getVocabularyStats() - Size statistics
+```
+
+**Missing Functionality**:
+
+**1. Multi-Language Support** (HIGH priority):
+```java
+// JAVA HAS:
+setLanguage("es"); // Switch to Spanish
+setLanguage("fr"); // Switch to French
+_predictors.get("de"); // Cached German predictor
+
+// KOTLIN MISSING:
+// Hardcoded "en.txt" only
+// No language parameter
+// No multi-language cache
+```
+
+**2. User Dictionary** (HIGH priority):
+```java
+// JAVA HAS:
+addUserWord("tribixbite"); // Add custom word
+removeUserWord("oldword"); // Remove word
+saveUserWords(); // Persist to SharedPreferences
+getPredictions("trib"); // Returns ["tribixbite", ...]
+
+// KOTLIN MISSING:
+// No user word management at all
+// No SharedPreferences integration
+// Cannot learn custom words
+// Cannot prioritize user words
+```
+
+**3. Dynamic Language Switching** (MEDIUM priority):
+```java
+// JAVA HAS:
+Locale.getDefault().getLanguage(); // Auto-detect
+setLanguage(newLang); // Hot-swap without restart
+
+// KOTLIN MISSING:
+// Must restart app to change dictionary
+// No runtime language switching
+```
+
+**Impact**: ⚠️ HIGH - MISSING USER PERSONALIZATION
+- ❌ Cannot switch to non-English languages
+- ❌ Cannot add custom words (names, brands, slang)
+- ❌ Cannot remove unwanted dictionary words
+- ❌ User cannot personalize vocabulary
+- ❌ No learned words from typing
+- ⚠️ English-only users affected minimally
+- 💀 International users completely blocked
+
+**Related Components**:
+- WordPredictor.java (File 64 - Bug #262) - Missing predictor that DictionaryManager wraps
+- OptimizedVocabularyImpl.kt (File 44) - Partial replacement, missing features
+
+**Recommendation**: ⚠️ **HIGH PRIORITY**
+Essential for:
+1. **International Users**: Support non-English languages
+2. **Personalization**: Learn user's custom vocabulary
+3. **Names & Brands**: Add proper nouns not in dictionary
+4. **User Control**: Remove unwanted suggestions
+
+Without this, the keyboard is English-only and cannot adapt to user's specific vocabulary needs.
+
+**Assessment**: DictionaryManager.java (166 lines) is partially implemented as OptimizedVocabularyImpl.kt (238 lines). The Kotlin version loads a single English vocabulary file but is missing multi-language support (language switching, per-language caching) and user dictionary functionality (add/remove custom words, SharedPreferences persistence). This is a HIGH priority bug affecting international users and all users who need custom vocabulary.
+
+**Status**: ⚠️ **PARTIAL IMPLEMENTATION** - Single language works, missing multi-lang & user words
+
+**Lines**: Java 166 → Kotlin 238 (43% expansion but missing 40% features)
+
+---
+

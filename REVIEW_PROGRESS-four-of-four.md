@@ -2833,3 +2833,107 @@ This is **HIGH RISK** because:
 - If ONNX accuracy ≥ Java hybrid: Architecture is validated
 - If ONNX accuracy < Java hybrid: Consider adding fallback strategies
 
+---
+
+## File 66/251: Utils.java (52 lines) vs Utils.kt (379 lines)
+
+**QUALITY**: ✅ **EXCELLENT** - All functionality present + major enhancements
+
+**Java Implementation**: 52 lines with basic utilities
+**Kotlin Implementation**: ✅ **379 lines with comprehensive gesture utilities**
+
+**Comparison**:
+- capitalize_string() → capitalizeString() ✅
+- show_dialog_on_ime() → showDialogOnIme() ✅ ENHANCED (error handling)
+- read_all_utf8() → readAllUtf8() ✅ ENHANCED
+- NEW: safeReadAllUtf8() - Safe resource management
+- NEW: dpToPx(), spToPx() - UI conversion utilities
+- NEW: distance(), angle(), normalizeAngle() - Gesture mathematics
+- NEW: smoothTrajectory() - Trajectory smoothing
+- NEW: calculateCurvature() - Curvature analysis
+- NEW: detectPrimaryDirection() - Direction detection
+- NEW: calculateVelocityProfile() - Velocity analysis
+- NEW: isCircularGesture() - Circle detection
+- NEW: calculatePathLength() - Path measurement
+- NEW: isLoopGesture() - Loop detection
+- NEW: simplifyTrajectory() - Douglas-Peucker algorithm
+- NEW: Extension functions - Kotlin idiomatic patterns
+
+**Assessment**: Rare case where Kotlin has significantly MORE functionality than Java. The gesture utilities are comprehensive and well-designed.
+
+---
+
+## File 67/251: VibratorCompat.java (46 lines) vs VibratorCompat.kt (69 lines)
+
+**QUALITY**: ⚠️ **FUNCTIONAL DIFFERENCE** - Modernized but missing Config integration
+
+**Comparison**:
+- Java: Static methods with Config.vibrate_custom and Config.vibrate_duration
+- Java: Falls back to View.performHapticFeedback() when custom disabled
+- Kotlin: Instance-based with modern VibratorManager API (Android S+)
+- Kotlin: No Config integration, no View.performHapticFeedback() fallback
+- Kotlin: Cleaner but less configurable
+
+**Assessment**: Design choice - Kotlin version is more modern but less configurable.
+
+---
+
+## File 68/251: VoiceImeSwitcher.java (152 lines) - FUNCTIONAL BUG IN KOTLIN
+
+**QUALITY**: ❌ **HIGH SEVERITY** - Completely different implementation that doesn't work correctly
+
+**Java Implementation**: 152 lines with IME enumeration, chooser dialog, persistent storage
+**Kotlin Implementation**: ❌ **75 lines with wrong approach**
+
+### BUG #264 (HIGH): VoiceImeSwitcher doesn't actually switch to voice IME
+
+**Java Implementation (CORRECT)**:
+- Enumerates available voice IMEs using InputMethodManager (lines 104-112)
+- Shows AlertDialog chooser for voice IME selection (lines 56-77)
+- Stores last-used voice IME in SharedPreferences (lines 21-22, 66-69)
+- Calls switchInputMethod() to actually switch to voice IME (lines 79-85)
+- Detects when to show chooser based on known IMEs (lines 31-42)
+- Handles SDK version differences for API 28+ (lines 81-84)
+
+**Kotlin Implementation (WRONG)**:
+- Launches RecognizerIntent.ACTION_RECOGNIZE_SPEECH activity (lines 30-40)
+- Checks if speech recognition is available (lines 21-25)
+- Returns speech recognition results (lines 65-67)
+- **DOES NOT enumerate voice IMEs**
+- **DOES NOT switch to voice IME keyboard**
+- **DOES NOT show chooser dialog**
+- **DOES NOT store preferences**
+
+**Impact**: ❌ HIGH - VOICE INPUT BROKEN
+- Voice button doesn't switch to voice IME keyboard
+- Launches external speech recognition activity instead
+- May not work correctly from IME context
+- User cannot choose preferred voice input method
+- No memory of last-used voice IME
+- Violates Android IME design patterns
+
+**Root Cause**: Kotlin implementation uses quick hack (speech recognition intent) instead of proper IME switching
+
+**Missing Features**:
+1. get_voice_ime_list() - Enumerate voice IMEs (lines 104-112)
+2. choose_voice_ime_and_update_prefs() - Show chooser dialog (lines 56-77)
+3. switch_input_method() - Actually switch IME (lines 79-85)
+4. SharedPreferences storage (PREF_LAST_USED, PREF_KNOWN_IMES)
+5. IME class with display name formatting (lines 126-151)
+6. get_ime_by_id() - Find IME by ID (lines 87-94)
+7. serialize_ime_ids() - Track known IMEs (lines 115-124)
+
+**Missing**: ~80% (122 out of 152 lines of core logic)
+
+**Recommendation**: REIMPLEMENT WITH CORRECT APPROACH
+- Use InputMethodManager.getEnabledInputMethodList()
+- Enumerate IMEs with mode == "voice"
+- Show chooser dialog using Utils.showDialogOnIme()
+- Store preferences for last-used voice IME
+- Call InputMethodService.switchInputMethod()
+- Follow Java implementation pattern exactly
+
+**Assessment**: This is a significant functional regression. The Kotlin version doesn't actually implement voice IME switching at all - it's a placeholder implementation using speech recognition. This will not work properly for users who have dedicated voice input keyboards installed.
+
+---
+

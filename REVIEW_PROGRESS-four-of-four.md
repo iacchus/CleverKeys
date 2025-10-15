@@ -3702,3 +3702,79 @@ Without persistent storage, the entire ML training data collection system is non
 
 ---
 
+
+## File 72/251: SwipeMLTrainer.java (425 lines) vs NONE IN KOTLIN
+
+**QUALITY**: 💀 **CATASTROPHIC - 100% MISSING** - No ML training implementation at all
+
+**Java Implementation**: 425 lines - Complete training system with statistical analysis
+**Kotlin Implementation**: ❌ **DOES NOT EXIST**
+
+### BUG #274 (CATASTROPHIC): ML training system completely missing
+
+**Java Features (425 lines)**:
+- Training orchestration with ExecutorService
+- TrainingListener interface for progress callbacks  
+- TrainingResult data class with metrics
+- canTrain() / shouldAutoRetrain() checks
+- startTraining() with async execution
+- performBasicTraining() - statistical analysis
+- calculateWordPatternAccuracy() - similarity metrics
+- calculateTraceSimilarity() - DTW-like algorithm
+- predictWordUsingTrainingData() - nearest neighbor
+- exportForExternalTraining() - NDJSON export
+
+**Impact**: 💀 CATASTROPHIC - NO MODEL TRAINING CAPABILITY
+- Cannot train models from collected data
+- Cannot improve predictions over time
+- Cannot validate model accuracy
+- Makes data collection system useless (no way to use the data)
+- Blocks iterative model improvement workflow
+
+**Missing Functionality**:
+1. Training orchestration (lines 64-141) - 78 lines
+2. TrainingListener callbacks (lines 39-45) - interface
+3. TrainingResult metrics (lines 47-62) - data class
+4. TrainingTask background execution (lines 145-221) - 77 lines
+5. exportForExternalTraining() (lines 227-241) - 15 lines
+6. performBasicTraining() (lines 246-345) - 100 lines
+7. calculateWordPatternAccuracy() (lines 350-369) - 20 lines
+8. calculateTraceSimilarity() (lines 374-401) - 28 lines
+9. predictWordUsingTrainingData() (lines 406-424) - 19 lines
+
+**Architecture**:
+```java
+SwipeMLTrainer
+├── Training Control: canTrain, startTraining, cancelTraining
+├── Progress Callbacks: TrainingListener interface
+├── Async Execution: ExecutorService + TrainingTask
+├── Statistical Training: performBasicTraining
+│   ├── Pattern Analysis: Group by word
+│   ├── Similarity Metrics: calculateTraceSimilarity (DTW-like)
+│   ├── Cross-validation: Leave-one-out validation
+│   └── Accuracy Calculation: Weighted average
+└── Export: exportForExternalTraining → NDJSON
+```
+
+**Related Components**:
+- SwipeMLDataStore - Provides loadAllData() for training
+- SwipeMLData - Training data format
+- ONNX model training pipeline (offline)
+
+**Recommendation**: 💀 **CRITICAL PRIORITY**
+Without this class, the entire ML training workflow is broken:
+1. Cannot train models from collected data
+2. Cannot validate model improvements  
+3. Cannot export for offline training
+4. Data collection serves no purpose
+
+**Note**: The Java implementation is a "basic" statistical trainer for validation. Real ONNX model training happens offline with Python scripts. However, this trainer is still essential for:
+- Validating data quality
+- Exporting training data
+- Providing user feedback during collection
+- Testing model accuracy on collected data
+
+**Assessment**: SwipeMLTrainer.java is completely missing from Kotlin implementation. This is a 100% missing file that blocks the entire ML training workflow. Even though the Java version is marked as "basic training" and real neural network training would use TensorFlow Lite or server-side training, this class is still essential for data export, validation, and user feedback.
+
+---
+

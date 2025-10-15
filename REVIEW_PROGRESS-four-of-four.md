@@ -2365,3 +2365,96 @@ Resource access helper with fallbacks to prevent crashes from wrong resource IDs
 
 **Assessment**: Well-intentioned defensive programming that MASKS the real problem. This file exists because R.kt has wrong IDs. Should be deleted after R.kt is fixed.
 
+
+---
+
+## File 59/251: LanguageDetector.java (313 lines) - MISSING IN KOTLIN
+
+**QUALITY**: 💀 **CATASTROPHIC** - Entire sophisticated language detection system missing
+
+### SUMMARY
+
+**Java Implementation (313 lines)**:
+- Character frequency analysis for 4 languages (English, Spanish, French, German)
+- Common word pattern matching with 20 words per language
+- Weighted scoring: 60% character frequency + 40% common words
+- Confidence threshold filtering (0.6 minimum)
+- Minimum text length validation (10 characters)
+- Support for word list detection
+- Statistical correlation calculation
+
+**Kotlin Implementation**:
+- ❌ **COMPLETELY MISSING** - File does not exist
+
+### BUG #257 (CATASTROPHIC): Entire LanguageDetector system missing
+
+**Java Components (313 lines)**:
+1. **Character Frequency Maps** (lines 47-129):
+   - English: 'e'(12.7%), 't'(9.1%), 'a'(8.2%), etc.
+   - Spanish: 'a'(12.5%), 'e'(12.2%), 'o'(8.7%), etc.
+   - French: 'e'(14.7%), 's'(7.9%), 'a'(7.6%), etc.
+   - German: 'e'(17.4%), 'n'(9.8%), 's'(7.3%), etc.
+
+2. **Common Word Lists** (lines 61, 83, 105, 127):
+   - 20 common words per language for pattern matching
+   - Examples: English {"the", "be", "to", "of", "and"...}
+
+3. **Detection Algorithms** (lines 136-287):
+   - `detectLanguage(String text)`: Main detection API
+   - `detectLanguageFromWords(List<String> words)`: Word-based detection
+   - `calculateLanguageScore()`: Weighted combination (lines 203-210)
+   - `calculateCharacterFrequencyScore()`: Statistical analysis (lines 215-257)
+   - `calculateCommonWordScore()`: Word matching (lines 262-287)
+
+4. **Utility Methods** (lines 292-312):
+   - `getSupportedLanguages()`: Returns supported language codes
+   - `isLanguageSupported()`: Language availability check
+   - `setConfidenceThreshold()`: Configuration (stub method)
+
+**Impact**: ❌ CATASTROPHIC - AUTOMATIC LANGUAGE SWITCHING BROKEN
+- Cannot detect language from user typing
+- BigramModel cannot switch language contexts
+- Multi-language users cannot benefit from contextual predictions
+- User must manually switch languages
+
+**Use Cases Lost**:
+- Bilingual/multilingual users (Spanish + English, French + English, etc.)
+- Automatic language context switching
+- Smart predictions based on detected language
+- Reduced prediction quality for multi-language users
+
+**Files Affected**:
+- BigramModel (Bug #255) would use this for language switching
+- NeuralSwipeEngine could benefit from language-aware predictions
+- User experience degraded for multi-language keyboards
+
+**Implementation Complexity**: HIGH
+- Requires linguistic data (character frequencies per language)
+- Statistical analysis algorithms
+- Threshold tuning for accuracy
+- 313 lines of language-specific patterns and logic
+
+### VERDICT: 💀 CATASTROPHIC (Bug #257)
+
+**Missing**: 100% (313 lines, 0 lines implemented)
+
+**Recommendation**: IMPLEMENT IMMEDIATELY
+- Critical for multi-language keyboard users
+- Essential for BigramModel language switching
+- Could use external library (e.g., Apache Tika LanguageIdentifier) or implement from scratch
+- Requires linguistic datasets and testing
+
+**Assessment**: Another catastrophic missing system. LanguageDetector is essential for multi-language support and contextual predictions. Without it, bilingual users have significantly degraded experience.
+
+**Related Missing Components**:
+- Bug #255: BigramModel (uses LanguageDetector)
+- Bug #256: KeyboardSwipeRecognizer (could benefit from language context)
+- These 3 systems form the intelligent prediction stack
+
+**Total Missing Systems Count**: 5 major systems
+1. KeyValueParser (Bug #1) - 96% missing
+2. ExtraKeys (Bug #) - 95% missing  
+3. BigramModel (Bug #255) - 100% missing
+4. KeyboardSwipeRecognizer (Bug #256) - 100% missing
+5. LanguageDetector (Bug #257) - 100% missing
+

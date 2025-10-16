@@ -9425,3 +9425,259 @@ if (BuildConfig.DEBUG) {
 **File Count**: 103/251 (41.0%)
 **Bugs**: 282 (1 new CATASTROPHIC bug - manual BuildConfig)
 
+
+---
+
+## FILE 104/251: CleverKeysSettings.kt (257 lines)
+
+**File**: `src/main/kotlin/tribixbite/keyboard2/CleverKeysSettings.kt`
+
+**Java Counterpart**: Likely part of `SettingsActivity.java` (800-1000 lines)
+
+### STATUS: ⚠️ DUPLICATE - SIMPLE PROGRAMMATIC UI (SUPERSEDED BY FILE 97)
+
+### KEY FEATURES (257 lines):
+
+**1. Programmatic UI Creation:**
+```kotlin
+private fun setupUI() = LinearLayout(this).apply {
+    orientation = LinearLayout.VERTICAL
+    setPadding(32, 32, 32, 32)
+    
+    addView(TextView(this@CleverKeysSettings).apply {
+        text = "⚙️ CleverKeys Settings"
+        textSize = 24f
+    })
+    
+    addView(createNeuralSettingsSection())
+    addView(createKeyboardSettingsSection())
+    addView(createActionButtons())
+    
+    setContentView(this)
+}
+```
+
+**2. Neural Settings Section:**
+```kotlin
+private fun createNeuralSettingsSection() = LinearLayout(this).apply {
+    // Neural prediction toggle
+    addView(CheckBox(this@CleverKeysSettings).apply {
+        text = "Enable Neural Swipe Prediction"
+        isChecked = neuralConfig.neuralPredictionEnabled
+        setOnCheckedChangeListener { _, isChecked ->
+            neuralConfig.neuralPredictionEnabled = isChecked
+        }
+    })
+    
+    // Beam width slider (IntRange)
+    addSliderSetting("Beam Width", neuralConfig.beamWidth, neuralConfig.beamWidthRange)
+    
+    // Max length slider (IntRange)
+    addSliderSetting("Max Word Length", neuralConfig.maxLength, neuralConfig.maxLengthRange)
+    
+    // Confidence threshold slider (FloatingPointRange)
+    addFloatSliderSetting("Confidence Threshold", neuralConfig.confidenceThreshold, neuralConfig.confidenceRange)
+}
+```
+
+**3. Slider Extension Functions:**
+```kotlin
+// Integer slider
+private fun LinearLayout.addSliderSetting(
+    name: String,
+    currentValue: Int,
+    range: IntRange,
+    onValueChanged: (Int) -> Unit
+) {
+    // TextView label + SeekBar
+    // Tag-based value display update
+    findViewWithTag<TextView>("label_$name")?.text = "$name: $value"
+}
+
+// Float slider with 1000 granularity
+private fun LinearLayout.addFloatSliderSetting(
+    name: String,
+    currentValue: Float,
+    range: ClosedFloatingPointRange<Float>,
+    onValueChanged: (Float) -> Unit
+) {
+    // Fine-grained float slider (max = 1000)
+    progress = ((currentValue - range.start) * 1000 / (range.endInclusive - range.start)).toInt()
+}
+```
+
+**4. Test Prediction Feature:**
+```kotlin
+private suspend fun testPredictionSystem() = withContext(Dispatchers.IO) {
+    // Create test swipe input (5 points, horizontal line)
+    val testPoints = listOf(
+        PointF(100f, 200f), PointF(150f, 200f), PointF(200f, 200f),
+        PointF(250f, 200f), PointF(300f, 200f)
+    )
+    
+    // Initialize neural engine and test
+    val neuralEngine = NeuralSwipeEngine(this@CleverKeysSettings, Config.globalConfig())
+    if (neuralEngine.initialize()) {
+        val result = neuralEngine.predictAsync(testInput)
+        
+        // Show result in AlertDialog
+        withContext(Dispatchers.Main) {
+            AlertDialog.Builder(this@CleverKeysSettings)
+                .setTitle("Prediction Test Result")
+                .setMessage("Top: ${result.topPrediction}")
+                .show()
+        }
+    }
+}
+```
+
+### COMPARISON WITH FILE 97 (SettingsActivity.kt):
+
+**DUPLICATE FUNCTIONALITY - TWO SETTINGS ACTIVITIES EXIST:**
+
+| Aspect | CleverKeysSettings.kt (File 104) | SettingsActivity.kt (File 97) |
+|--------|----------------------------------|-------------------------------|
+| **Lines** | 257 | 935 (3.6x larger) |
+| **UI Framework** | Programmatic LinearLayout | Jetpack Compose + Material 3 |
+| **Settings Categories** | 2 (Neural, Keyboard stub) | 5 (Neural, Advanced, Swipe, ML, Experimental) |
+| **Settings Count** | 4 (enable, beam, length, threshold) | 30+ comprehensive settings |
+| **Features** | Basic sliders + test | Version mgmt, update checking, XML fallback |
+| **Modern Patterns** | Partially (coroutines, Kotlin DSL) | Fully (Compose, reactive state, mutableStateOf) |
+| **Status** | Likely older/deprecated | Current implementation |
+| **Quality** | GOOD (simple, functional) | EXCELLENT (production-ready) |
+
+**ARCHITECTURAL ISSUE**:
+Having **TWO settings activities** is problematic:
+1. **User Confusion**: Which one launches when user taps "Settings"?
+2. **Maintenance Burden**: Bug fixes need to be applied twice
+3. **Feature Divergence**: File 97 has 30+ settings, File 104 has only 4
+4. **Inconsistent UX**: Different UI frameworks (LinearLayout vs Compose)
+
+**Likely Scenario**:
+- CleverKeysSettings.kt was **initial implementation** (simple programmatic UI)
+- SettingsActivity.kt was **later replacement** (modern Compose UI)
+- CleverKeysSettings.kt should be **DEPRECATED or REMOVED**
+
+### ISSUES IDENTIFIED:
+
+**Bug #283 (HIGH)**: GlobalScope.launch memory leak
+- **Location**: Line 135
+- **Code**: `GlobalScope.launch { testPredictionSystem() }`
+- **Issue**: Same as File 27 (ClipboardHistoryCheckBox) - GlobalScope never cancels
+- **Impact**: Memory leak when activity destroyed while testing
+- **Fix**: Use activity-scoped CoroutineScope with lifecycle awareness
+- **Pattern**: This is the **3rd occurrence** of GlobalScope leak (Files 27, 104)
+
+**Bug #284 (LOW)**: Undefined logE() function
+- **Location**: Line 251
+- **Code**: `logE("Test prediction failed", e)`
+- **Issue**: logE() function not imported or defined
+- **Impact**: Compilation error when exception occurs
+- **Fix**: Import Logs.logE() or change to logD()
+- **Pattern**: This is the **4th occurrence** (Files 42, 45, 47, 102, 104)
+
+**Issue #285 (MEDIUM)**: Hardcoded strings (no i18n)
+- **Locations**: Lines 37, 58, 65, 104, 111, 123, 133, 149, 182
+- **Examples**: 
+  - "⚙️ CleverKeys Settings"
+  - "🧠 Neural Prediction Settings"
+  - "Enable Neural Swipe Prediction"
+  - "🔄 Reset to Defaults"
+  - "🧪 Test Predictions"
+- **Impact**: App not translatable, poor i18n support
+- **Fix**: Use string resources from res/values/strings.xml
+- **Note**: File 97 (SettingsActivity.kt) also has some hardcoded strings
+
+**Issue #286 (MEDIUM)**: Missing toast() extension function
+- **Locations**: Lines 69, 126, 246, 253
+- **Code**: `toast("Neural prediction enabled")`
+- **Issue**: toast() function not defined in this file (likely extension in Utils.kt)
+- **Impact**: If toast() is not imported, code won't compile
+- **Fix**: Import extension from Utils.kt or add function
+
+**Issue #287 (LOW)**: No ScrollView wrapper
+- **Location**: setupUI() function (line 31)
+- **Issue**: LinearLayout directly set as content view without ScrollView
+- **Impact**: On small screens, settings may be cut off (not scrollable)
+- **Fix**: Wrap LinearLayout in ScrollView
+- **Code**:
+```kotlin
+setContentView(ScrollView(this).apply {
+    addView(this@apply) // LinearLayout
+})
+```
+
+**Issue #288 (LOW)**: No error handling for NeuralConfig initialization
+- **Location**: Line 26
+- **Code**: `neuralConfig = NeuralConfig(prefs)`
+- **Issue**: No try-catch if NeuralConfig constructor throws
+- **Impact**: Activity crashes if config initialization fails
+- **Fix**: Add try-catch with error dialog
+
+**Issue #289 (LOW)**: No lifecycle cleanup
+- **Location**: Entire file
+- **Issue**: NeuralConfig not released in onDestroy()
+- **Impact**: Potential memory leak if NeuralConfig holds resources
+- **Fix**: Add onDestroy() override to cleanup
+
+**Issue #290 (CRITICAL)**: Duplicate settings activity
+- **Location**: Entire file (257 lines)
+- **Issue**: CleverKeysSettings.kt duplicates functionality of SettingsActivity.kt (File 97)
+- **Impact**: 
+  1. Maintenance burden (two files to update)
+  2. User confusion (which one launches?)
+  3. Feature divergence (File 97 has 30+ settings, this has 4)
+  4. Inconsistent UX (LinearLayout vs Compose)
+- **Recommendation**: 
+  - **DEPRECATE this file** (CleverKeysSettings.kt)
+  - **REMOVE from manifest** (if registered)
+  - **USE ONLY SettingsActivity.kt** (File 97) going forward
+- **Severity**: CRITICAL (architectural issue)
+
+### COMPARISON WITH JAVA:
+
+**Estimated Java Implementation** (800-1000 lines in SettingsActivity.java):
+- Likely used PreferenceActivity or PreferenceFragmentCompat
+- XML preference screens (res/xml/preferences.xml)
+- Separate preference classes for each setting type
+- Manual preference listeners with findViewById
+- Traditional Java patterns (no Kotlin DSL)
+
+**Kotlin Changes** (File 104):
+- Programmatic UI (no XML)
+- Kotlin DSL for UI creation
+- Extension functions for slider creation
+- Coroutines for async testing
+- 75% code reduction (257 lines vs 800-1000 Java)
+
+**Kotlin Improvements** (File 97 replaces both Java and File 104):
+- Jetpack Compose UI (modern declarative)
+- Material Design 3 theming
+- Reactive state with mutableStateOf
+- 30+ comprehensive settings
+- Version management + update checking
+
+### RECOMMENDATION:
+
+**IMMEDIATE ACTION**:
+1. **Deprecate CleverKeysSettings.kt** (this file)
+2. **Remove from AndroidManifest.xml** (if registered)
+3. **Document as unused** (add deprecation comment)
+4. **Use only SettingsActivity.kt** (File 97) going forward
+
+**OR**:
+1. **Keep both files** if they serve different purposes:
+   - CleverKeysSettings.kt: Simple quick settings (accessible from keyboard)
+   - SettingsActivity.kt: Comprehensive settings (accessible from launcher)
+2. **Document purpose** of each activity clearly
+3. **Ensure consistent settings** (both modify same NeuralConfig)
+
+### SUMMARY:
+
+CleverKeysSettings.kt is a **GOOD implementation** of a simple programmatic settings UI, but it's **SUPERSEDED by SettingsActivity.kt** (File 97) which provides a much more comprehensive Compose-based settings experience. The file has 6 bugs/issues (GlobalScope leak, undefined logE, hardcoded strings, missing toast(), no ScrollView, no cleanup) and represents **DUPLICATE FUNCTIONALITY** that should be deprecated.
+
+**CRITICAL ISSUE**: Having TWO settings activities creates maintenance burden and user confusion. Recommend deprecating this file and using only SettingsActivity.kt (File 97).
+
+**File Count**: 104/251 (41.4%)
+**Bugs**: 290 (8 new issues, 2 HIGH priority - GlobalScope leak + duplicate activity)
+

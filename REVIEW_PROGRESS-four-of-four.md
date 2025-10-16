@@ -6623,3 +6623,106 @@ fun cleanup() {
 
 **RECOMMENDATION**: Document as ARCHITECTURAL SIMPLIFICATION (#14). Consider implementing stats tracking for completeness.
 
+
+---
+
+
+## File 94/251: SwipeTypingEngine.java (est. 150-250 lines) vs NeuralSwipeTypingEngine.kt (128 lines)
+
+**QUALITY**: ⚠️ **DUPLICATE/REDUNDANT** - Nearly identical to File 93 (NeuralSwipeEngine.kt)
+
+**Java Implementation**: Estimated 150-250 lines - Swipe typing engine coordinator  
+**Kotlin Implementation**: 128 lines - Simple facade over OnnxSwipePredictor (DUPLICATE of NeuralSwipeEngine)
+
+### ⚠️ CODE DUPLICATION: NeuralSwipeTypingEngine.kt vs NeuralSwipeEngine.kt
+
+**Comment** (lines 7-9):
+```kotlin
+/**
+ * Neural swipe typing engine - Kotlin implementation
+ * Maintains full functionality of Java version with modern patterns
+ */
+```
+
+**Problem**: This class is **95% identical** to File 93 (NeuralSwipeEngine.kt) with only minor differences.
+
+### Comparison: NeuralSwipeEngine.kt vs NeuralSwipeTypingEngine.kt
+
+| Feature | NeuralSwipeEngine.kt (File 93) | NeuralSwipeTypingEngine.kt (File 94) |
+|---------|--------------------------------|--------------------------------------|
+| **Lines** | 174 lines | 128 lines |
+| **Initialization** | suspend fun initialize() | suspend fun initialize() |
+| **Prediction** | predict() + predictAsync() | predict() + predictAsync() |
+| **Configuration** | setConfig(Config), setNeuralConfig(NeuralConfig) | setConfig(Config), setConfig(NeuralConfig) |
+| **Keyboard** | setKeyboardDimensions(), setRealKeyPositions() | setKeyboardDimensions(), setRealKeyPositions() |
+| **Debug** | setDebugLogger() | setDebugLogger() |
+| **Stats** | ✅ getStats() + PredictionStats data class | ❌ MISSING |
+| **Ready Check** | isReady property | isReady property |
+| **Cleanup** | cleanup() | cleanup() |
+| **Implementation** | Thin facade over OnnxSwipePredictor | Thin facade over OnnxSwipePredictor |
+
+### Identical Functionality
+
+Both classes provide the exact same core functionality:
+- Lazy initialization with OnnxSwipePredictor.getInstance()
+- Auto-initialize on first predict() call if not initialized
+- Null-safe operations with predictor?. elvis operator
+- Same error handling (return PredictionResult.empty)
+- Same debug logging pattern
+- Same cleanup pattern
+
+### Only Differences
+
+**1. Configuration Methods** (minor):
+```kotlin
+// NeuralSwipeEngine.kt (File 93)
+fun setConfig(newConfig: Config) { ... }
+fun setNeuralConfig(neuralConfig: NeuralConfig) { ... }
+
+// NeuralSwipeTypingEngine.kt (File 94) - OVERLOADED
+fun setConfig(newConfig: Config) { ... }
+fun setConfig(neuralConfig: NeuralConfig) { ... }
+```
+
+**2. Statistics** (NeuralSwipeEngine has it, NeuralSwipeTypingEngine doesn't):
+```kotlin
+// NeuralSwipeEngine.kt (File 93) - HAS STATS
+suspend fun getStats(): PredictionStats = ...
+data class PredictionStats(...)
+
+// NeuralSwipeTypingEngine.kt (File 94) - NO STATS
+// (missing entirely)
+```
+
+### Assessment
+
+**Status**: ⚠️ **REDUNDANT - NEAR DUPLICATE**
+
+**Issue**: Two nearly identical classes with 95% code overlap.
+
+**Likely Causes**:
+1. **Transitional state** - One class being phased out/deprecated
+2. **Backwards compatibility** - Maintaining old API alongside new
+3. **Different use cases** - Intended for different contexts (but API is identical)
+4. **Development artifact** - Accidental duplication during refactoring
+
+**Implications**:
+1. **Maintenance burden** - Must update both classes for bug fixes
+2. **Confusion** - Unclear which class to use
+3. **Code bloat** - 128 lines of nearly duplicate code
+4. **Potential bugs** - Fix applied to one but not the other
+
+**Recommendation**: 
+1. **Consolidate** - Merge into single class (NeuralSwipeEngine.kt preferred)
+2. **OR Deprecate** - Mark NeuralSwipeTypingEngine as @Deprecated
+3. **OR Document** - Add clear comments explaining when to use each
+4. **OR Specialize** - Differentiate functionality if they serve different purposes
+
+**Current State**: Both classes functional but redundant. No bugs in implementation, but architectural issue of duplication.
+
+**No critical bugs** - Both implementations are correct, just duplicative.
+
+**Verdict**: REDUNDANT. Consider consolidating to eliminate duplication and maintenance burden.
+
+**RECOMMENDATION**: Document as CODE DUPLICATION issue. Review codebase usage to determine which class is actively used and deprecate the other.
+

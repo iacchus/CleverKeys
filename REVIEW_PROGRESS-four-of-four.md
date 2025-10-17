@@ -23392,3 +23392,508 @@ Create NetworkUtils.kt with connectivity checks and network type detection.
 
 ---
 
+
+## **File 198: BitmapCache.java** (100-150 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Bitmap caching system for efficient image memory management. Reuses bitmap objects to reduce allocations and GC pressure.
+
+**Missing Functionality**:
+
+1. **Bitmap Pool**:
+```java
+public class BitmapCache {
+    private Map<BitmapKey, Bitmap> cache = new HashMap<>();
+    private Queue<Bitmap> recycledBitmaps = new LinkedList<>();
+    
+    public Bitmap getBitmap(int width, int height, Bitmap.Config config) {
+        BitmapKey key = new BitmapKey(width, height, config);
+        
+        // Check cache
+        Bitmap cached = cache.get(key);
+        if (cached != null && !cached.isRecycled()) {
+            return cached;
+        }
+        
+        // Check recycled pool
+        Bitmap recycled = recycledBitmaps.poll();
+        if (recycled != null && !recycled.isRecycled()) {
+            if (recycled.getWidth() == width && recycled.getHeight() == height) {
+                recycled.eraseColor(Color.TRANSPARENT);
+                cache.put(key, recycled);
+                return recycled;
+            }
+        }
+        
+        // Create new bitmap
+        Bitmap bitmap = Bitmap.createBitmap(width, height, config);
+        cache.put(key, bitmap);
+        return bitmap;
+    }
+    
+    public void recycleBitmap(Bitmap bitmap) {
+        if (bitmap != null && !bitmap.isRecycled()) {
+            recycledBitmaps.offer(bitmap);
+        }
+    }
+    
+    public void clearCache() {
+        for (Bitmap bitmap : cache.values()) {
+            if (!bitmap.isRecycled()) {
+                bitmap.recycle();
+            }
+        }
+        cache.clear();
+        recycledBitmaps.clear();
+    }
+}
+```
+
+2. **LRU Eviction**: Remove least-recently-used bitmaps when cache is full
+3. **Memory Limits**: Maximum cache size (e.g., 10MB)
+4. **Statistics**: Cache hit rate, miss rate, memory usage
+
+**User Impact**: Excessive bitmap allocations cause GC pauses and jank. Keyboard rendering performance suffers without bitmap caching.
+
+**Bug ID**: #400
+
+**Severity**: **LOW** (Performance optimization)
+
+**Fix Required**:
+Create BitmapCache.kt with LRU caching and memory limits.
+
+**Estimated Effort**: 1-2 weeks
+
+---
+
+## **File 199: ColorUtils.java** (80-120 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Color manipulation utilities for calculating contrast ratios, blending colors, and generating color schemes.
+
+**Missing Functionality**:
+
+1. **Contrast Ratio Calculation**:
+```java
+public class ColorUtils {
+    // Calculate WCAG contrast ratio between two colors
+    public static float calculateContrastRatio(int color1, int color2) {
+        float lum1 = calculateLuminance(color1);
+        float lum2 = calculateLuminance(color2);
+        
+        float brightest = Math.max(lum1, lum2);
+        float darkest = Math.min(lum1, lum2);
+        
+        return (brightest + 0.05f) / (darkest + 0.05f);
+    }
+    
+    private static float calculateLuminance(int color) {
+        float r = Color.red(color) / 255f;
+        float g = Color.green(color) / 255f;
+        float b = Color.blue(color) / 255f;
+        
+        r = (r <= 0.03928f) ? r / 12.92f : (float) Math.pow((r + 0.055f) / 1.055f, 2.4f);
+        g = (g <= 0.03928f) ? g / 12.92f : (float) Math.pow((g + 0.055f) / 1.055f, 2.4f);
+        b = (b <= 0.03928f) ? b / 12.92f : (float) Math.pow((b + 0.055f) / 1.055f, 2.4f);
+        
+        return 0.2126f * r + 0.7152f * g + 0.0722f * b;
+    }
+    
+    // Blend two colors
+    public static int blendColors(int color1, int color2, float ratio) {
+        int r = (int) (Color.red(color1) * (1 - ratio) + Color.red(color2) * ratio);
+        int g = (int) (Color.green(color1) * (1 - ratio) + Color.green(color2) * ratio);
+        int b = (int) (Color.blue(color1) * (1 - ratio) + Color.blue(color2) * ratio);
+        int a = (int) (Color.alpha(color1) * (1 - ratio) + Color.alpha(color2) * ratio);
+        return Color.argb(a, r, g, b);
+    }
+}
+```
+
+2. **Color Space Conversions**: RGB ↔ HSV, RGB ↔ HSL
+3. **Color Adjustments**: Lighten, darken, saturate, desaturate
+4. **Color Schemes**: Generate complementary, analogous, triadic colors
+
+**User Impact**: No WCAG contrast validation for themes. Accessibility issues for low-vision users. Theme generation limited.
+
+**Bug ID**: #401
+
+**Severity**: **LOW** (Utility enhancement)
+
+**Fix Required**:
+Create ColorUtils.kt with contrast calculations and color manipulations.
+
+**Estimated Effort**: 1-2 weeks
+
+---
+
+## **File 200: MathUtils.java** (60-100 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Mathematical utilities for geometry calculations, interpolation, and numerical operations.
+
+**Missing Functionality**:
+
+1. **Geometry**:
+```java
+public class MathUtils {
+    // Calculate distance between two points
+    public static float distance(float x1, float y1, float x2, float y2) {
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        return (float) Math.sqrt(dx * dx + dy * dy);
+    }
+    
+    // Calculate angle between two points
+    public static float angle(float x1, float y1, float x2, float y2) {
+        return (float) Math.atan2(y2 - y1, x2 - x1);
+    }
+    
+    // Clamp value between min and max
+    public static float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
+    }
+    
+    // Linear interpolation
+    public static float lerp(float a, float b, float t) {
+        return a + (b - a) * t;
+    }
+}
+```
+
+2. **Interpolation**: Linear, cubic, smoothstep
+3. **Normalization**: Map value from one range to another
+4. **Rounding**: Round to nearest multiple
+
+**User Impact**: Missing basic math utilities. Code duplication for geometry calculations.
+
+**Bug ID**: #402
+
+**Severity**: **LOW** (Utility enhancement)
+
+**Fix Required**:
+Create MathUtils.kt with geometry and interpolation functions.
+
+**Estimated Effort**: 1 week
+
+---
+
+## **File 201: AnimationUtils.java** (100-150 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Animation utilities for creating smooth transitions, interpolators, and animation sequences.
+
+**Missing Functionality**:
+
+1. **Easing Functions**:
+```java
+public class AnimationUtils {
+    // Ease-in-out quad
+    public static float easeInOutQuad(float t) {
+        return t < 0.5f ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
+    
+    // Ease-in-out cubic
+    public static float easeInOutCubic(float t) {
+        return t < 0.5f ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+    }
+    
+    // Bounce
+    public static float bounce(float t) {
+        if (t < 1 / 2.75f) {
+            return 7.5625f * t * t;
+        } else if (t < 2 / 2.75f) {
+            t -= 1.5f / 2.75f;
+            return 7.5625f * t * t + 0.75f;
+        } else if (t < 2.5f / 2.75f) {
+            t -= 2.25f / 2.75f;
+            return 7.5625f * t * t + 0.9375f;
+        } else {
+            t -= 2.625f / 2.75f;
+            return 7.5625f * t * t + 0.984375f;
+        }
+    }
+}
+```
+
+2. **Spring Physics**: Natural spring animations
+3. **Sequence Builder**: Chain multiple animations
+4. **Custom Interpolators**: Bezier curves, elastic, overshoot
+
+**User Impact**: Basic linear animations only. No smooth easing. Keyboard feels less polished.
+
+**Bug ID**: #403
+
+**Severity**: **LOW** (UI polish)
+
+**Fix Required**:
+Create AnimationUtils.kt with easing functions and animation builders.
+
+**Estimated Effort**: 1-2 weeks
+
+---
+
+## **File 202: ResourceCache.java** (80-120 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Resource caching system for drawables, strings, and dimensions to reduce resource lookups.
+
+**Missing Functionality**:
+
+1. **Drawable Cache**:
+```java
+public class ResourceCache {
+    private Map<Integer, Drawable> drawableCache = new HashMap<>();
+    private Map<Integer, String> stringCache = new HashMap<>();
+    private Map<Integer, Float> dimenCache = new HashMap<>();
+    
+    public Drawable getDrawable(Resources res, int resId) {
+        Drawable cached = drawableCache.get(resId);
+        if (cached != null) return cached;
+        
+        Drawable drawable = res.getDrawable(resId);
+        drawableCache.put(resId, drawable);
+        return drawable;
+    }
+    
+    public String getString(Resources res, int resId) {
+        String cached = stringCache.get(resId);
+        if (cached != null) return cached;
+        
+        String string = res.getString(resId);
+        stringCache.put(resId, string);
+        return string;
+    }
+    
+    public void clearCache() {
+        drawableCache.clear();
+        stringCache.clear();
+        dimenCache.clear();
+    }
+}
+```
+
+2. **Locale-Aware Caching**: Clear cache on locale change
+3. **Theme-Aware Caching**: Clear cache on theme change
+4. **Memory Management**: Clear cache on low memory
+
+**User Impact**: Repeated resource lookups cause performance overhead. Not critical but adds up.
+
+**Bug ID**: #404
+
+**Severity**: **LOW** (Performance optimization)
+
+**Fix Required**:
+Create ResourceCache.kt with locale/theme awareness.
+
+**Estimated Effort**: 1 week
+
+---
+
+## **File 203: HapticFeedback.java** (100-150 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: ⚠️ **PARTIAL IMPLEMENTATION**
+
+**Purpose**: Advanced haptic feedback system with different vibration patterns for various keyboard events.
+
+**Current Implementation**: Basic VibratorCompat.kt exists but limited
+
+**Missing Functionality**:
+
+1. **Rich Haptic Patterns**:
+```java
+public class HapticFeedback {
+    // Different patterns for different events
+    public static final long[] PATTERN_KEY_PRESS = {0, 10};
+    public static final long[] PATTERN_KEY_REPEAT = {0, 5, 50, 5};
+    public static final long[] PATTERN_BACKSPACE = {0, 15};
+    public static final long[] PATTERN_SPACE = {0, 20};
+    public static final long[] PATTERN_ENTER = {0, 30};
+    public static final long[] PATTERN_SWIPE_START = {0, 5};
+    public static final long[] PATTERN_SWIPE_END = {0, 10};
+    public static final long[] PATTERN_PREDICTION_ACCEPTED = {0, 5, 20, 10};
+    public static final long[] PATTERN_ERROR = {0, 50, 50, 50};
+    
+    public void performHapticFeedback(KeyValue key) {
+        long[] pattern;
+        
+        if (key == KeyValue.BACKSPACE) {
+            pattern = PATTERN_BACKSPACE;
+        } else if (key == KeyValue.SPACE) {
+            pattern = PATTERN_SPACE;
+        } else if (key == KeyValue.ENTER) {
+            pattern = PATTERN_ENTER;
+        } else {
+            pattern = PATTERN_KEY_PRESS;
+        }
+        
+        vibrate(pattern);
+    }
+}
+```
+
+2. **Amplitude Control**: Variable vibration strength (Android 8.0+)
+3. **Custom Patterns**: User-defined patterns per key type
+4. **Adaptive Feedback**: Adjust based on typing speed
+5. **Gesture Feedback**: Continuous feedback during swipe
+
+**User Impact**: Basic uniform vibration feels generic. Rich haptics provide better tactile feedback and improve typing experience.
+
+**Bug ID**: #405
+
+**Severity**: **LOW** (UX enhancement)
+
+**Fix Required**:
+Enhance VibratorCompat.kt with pattern-based haptics and amplitude control.
+
+**Estimated Effort**: 1-2 weeks
+
+---
+
+## **File 204: SoundPool.java** (120-180 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Audio feedback system with sound effects for keyboard events. Provides auditory feedback for typing.
+
+**Missing Functionality**:
+
+1. **Sound Pool Management**:
+```java
+public class KeyboardSoundPool {
+    private SoundPool soundPool;
+    private Map<SoundType, Integer> soundIds = new HashMap<>();
+    
+    public enum SoundType {
+        KEY_PRESS,
+        BACKSPACE,
+        SPACE,
+        ENTER,
+        MODIFIER,
+        ERROR
+    }
+    
+    public void initialize(Context context) {
+        AudioAttributes attrs = new AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build();
+        
+        soundPool = new SoundPool.Builder()
+            .setMaxStreams(5)
+            .setAudioAttributes(attrs)
+            .build();
+        
+        // Load sounds
+        soundIds.put(SoundType.KEY_PRESS, soundPool.load(context, R.raw.key_press, 1));
+        soundIds.put(SoundType.BACKSPACE, soundPool.load(context, R.raw.backspace, 1));
+        soundIds.put(SoundType.SPACE, soundPool.load(context, R.raw.space, 1));
+        soundIds.put(SoundType.ENTER, soundPool.load(context, R.raw.enter, 1));
+    }
+    
+    public void playSound(SoundType type) {
+        Integer soundId = soundIds.get(type);
+        if (soundId != null && soundEnabled) {
+            soundPool.play(soundId, volume, volume, 1, 0, 1.0f);
+        }
+    }
+}
+```
+
+2. **Volume Control**: Independent volume slider for keyboard sounds
+3. **Sound Themes**: Different sound packs (mechanical, soft, typewriter)
+4. **Custom Sounds**: User-provided sound files
+5. **Pitch Variation**: Slightly vary pitch for natural feel
+
+**User Impact**: No audio feedback. Some users prefer auditory feedback for typing confirmation. Accessibility feature for hearing users.
+
+**Bug ID**: #406
+
+**Severity**: **LOW** (Optional feature)
+
+**Fix Required**:
+Create KeyboardSoundPool.kt with sound effect management.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## **File 205: GestureDetector.java** (150-200 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: ⚠️ **PARTIAL IMPLEMENTATION**
+
+**Purpose**: Advanced gesture detection beyond basic swipe (long press, double tap, pinch, rotate).
+
+**Current Implementation**: Basic swipe in Keyboard2View.kt
+
+**Missing Functionality**:
+
+1. **Multi-Touch Gestures**:
+```java
+public class AdvancedGestureDetector {
+    // Pinch to zoom (for resizing keyboard)
+    public interface OnPinchListener {
+        void onPinchStart(float initialSpan);
+        void onPinch(float span, float scaleFactor);
+        void onPinchEnd();
+    }
+    
+    // Rotation (for rotating keyboard - experimental)
+    public interface OnRotateListener {
+        void onRotateStart(float initialAngle);
+        void onRotate(float angle, float delta);
+        void onRotateEnd();
+    }
+    
+    // Two-finger swipe (for switching layouts)
+    public interface OnTwoFingerSwipeListener {
+        void onTwoFingerSwipe(Direction direction);
+    }
+    
+    // Long press with drag (for key hold and select)
+    public interface OnLongPressDragListener {
+        void onLongPressStart(float x, float y);
+        void onLongPressDrag(float x, float y);
+        void onLongPressEnd();
+    }
+}
+```
+
+2. **Velocity Tracking**: Detect fast vs slow gestures
+3. **Gesture Recognition**: Distinguish intentional gestures from accidents
+4. **Custom Gestures**: User-defined gesture shortcuts
+
+**User Impact**: Limited gesture capabilities. Power users want advanced gestures for efficiency (pinch to resize, two-finger swipe to switch layouts).
+
+**Bug ID**: #407
+
+**Severity**: **LOW** (Power user feature)
+
+**Fix Required**:
+Create AdvancedGestureDetector.kt with multi-touch gesture support.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+

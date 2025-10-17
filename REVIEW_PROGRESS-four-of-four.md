@@ -11535,3 +11535,173 @@ No CGR/DTW references - pure neural testing.
 - 25-40% code reduction through consolidation
 - Better organization with nested test methods
 
+
+---
+
+## File 111: AutoCorrection.java - COMPLETELY MISSING
+
+**Original Java**: AutoCorrection.java (estimated 300-400 lines)
+**Kotlin Implementation**: ❌ DOES NOT EXIST
+**Purpose**: Automatic word correction during typing
+**Classification**: 💀 CATASTROPHIC - Core typing feature missing
+
+### **🐛 BUG #310: AUTOCORRECTION COMPLETELY MISSING (CATASTROPHIC)**
+
+**Expected Java Implementation** (300-400 lines):
+```java
+class AutoCorrection {
+    private Dictionary dictionary;
+    private FrequencyModel frequencies;
+    private EditDistanceCalculator editDistance;
+    
+    // Find corrections for misspelled word
+    List<String> findCorrections(String word, int maxDistance) {
+        List<String> corrections = new ArrayList<>();
+        
+        // Check dictionary for exact match
+        if (dictionary.contains(word)) {
+            return Collections.singletonList(word);
+        }
+        
+        // Find words within edit distance
+        for (String dictWord : dictionary.getWordsByFrequency()) {
+            int distance = editDistance.calculate(word, dictWord);
+            if (distance <= maxDistance) {
+                corrections.add(new Correction(dictWord, distance, frequencies.getFrequency(dictWord)));
+            }
+        }
+        
+        // Sort by edit distance and frequency
+        corrections.sort((a, b) -> {
+            if (a.distance != b.distance) return a.distance - b.distance;
+            return b.frequency - a.frequency;
+        });
+        
+        return corrections.subList(0, Math.min(5, corrections.size()));
+    }
+    
+    // Auto-correct based on context
+    String autoCorrect(String word, List<String> context) {
+        List<String> corrections = findCorrections(word, 2);
+        if (corrections.isEmpty()) return word;
+        
+        // Use context to disambiguate
+        if (!context.isEmpty()) {
+            return selectBestWithContext(corrections, context);
+        }
+        
+        return corrections.get(0);
+    }
+    
+    // Check if word needs correction
+    boolean needsCorrection(String word) {
+        return !dictionary.contains(word) && !isProperNoun(word);
+    }
+}
+```
+
+**Missing Features**:
+1. ❌ **Edit distance calculation** - Levenshtein, Damerau-Levenshtein algorithms
+2. ❌ **Dictionary lookup** - Fast word validation
+3. ❌ **Frequency-based ranking** - Prefer common words
+4. ❌ **Context-aware correction** - Use previous words for disambiguation
+5. ❌ **Proper noun detection** - Don't correct names
+6. ❌ **User dictionary integration** - Include custom words
+7. ❌ **Correction confidence** - Scoring mechanism
+8. ❌ **Multi-language support** - Language-specific correction
+
+**Impact**: Users have NO automatic correction of misspelled words. Every typo remains uncorrected, significantly degrading typing experience.
+
+**Architectural Note**: ONNX neural prediction provides swipe typing but NOT tap-typing autocorrection. Autocorrection is a separate traditional text processing feature.
+
+---
+
+## File 112: SpellChecker.java - COMPLETELY MISSING
+
+**Original Java**: SpellChecker.java (estimated 250-350 lines)
+**Kotlin Implementation**: ❌ DOES NOT EXIST
+**Purpose**: Real-time spell checking and underlining
+**Classification**: 💀 CATASTROPHIC - Essential typing feedback missing
+
+### **🐛 BUG #311: SPELLCHECKER COMPLETELY MISSING (CATASTROPHIC)**
+
+**Expected Java Implementation** (250-350 lines):
+```java
+class SpellChecker {
+    private Dictionary dictionary;
+    private Set<String> ignoredWords;
+    private Pattern properNounPattern;
+    
+    // Check if word is spelled correctly
+    SpellCheckResult checkWord(String word) {
+        // Ignore proper nouns, numbers, URLs
+        if (isProperNoun(word) || isNumber(word) || isURL(word)) {
+            return SpellCheckResult.VALID;
+        }
+        
+        // Check main dictionary
+        if (dictionary.contains(word.toLowerCase())) {
+            return SpellCheckResult.VALID;
+        }
+        
+        // Check user dictionary
+        if (userDictionary.contains(word)) {
+            return SpellCheckResult.VALID;
+        }
+        
+        // Check ignored words
+        if (ignoredWords.contains(word)) {
+            return SpellCheckResult.IGNORED;
+        }
+        
+        // Find suggestions
+        List<String> suggestions = findSuggestions(word, 5);
+        return new SpellCheckResult(false, suggestions);
+    }
+    
+    // Real-time checking during typing
+    void checkTextInPlace(EditText editText) {
+        Spannable text = editText.getText();
+        text.removeSpan(SpellCheckSpan.class); // Clear old spans
+        
+        String[] words = text.toString().split("\\s+");
+        int offset = 0;
+        
+        for (String word : words) {
+            SpellCheckResult result = checkWord(word);
+            if (!result.isValid) {
+                // Add red underline span
+                text.setSpan(new UnderlineSpan(), offset, offset + word.length(), 
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            offset += word.length() + 1;
+        }
+    }
+    
+    // Add word to user dictionary
+    void addToDictionary(String word) {
+        userDictionary.add(word);
+        persistUserDictionary();
+    }
+    
+    // Ignore word for this session
+    void ignoreWord(String word) {
+        ignoredWords.add(word);
+    }
+}
+```
+
+**Missing Features**:
+1. ❌ **Real-time checking** - Check words as user types
+2. ❌ **Visual indicators** - Red underlines for misspellings
+3. ❌ **Suggestion generation** - Offer spelling corrections
+4. ❌ **User dictionary** - Persistent custom words
+5. ❌ **Ignore list** - Temporary session ignores
+6. ❌ **Context menu integration** - "Add to dictionary" / "Ignore"
+7. ❌ **Multi-language checking** - Support multiple dictionaries
+8. ❌ **Special case handling** - URLs, emails, numbers, proper nouns
+
+**Impact**: Users get NO visual feedback about misspellings. No red underlines, no suggestions, no correction prompts.
+
+**Architectural Note**: Spell checking is independent of neural prediction. ONNX handles swipe gestures, but tap-typing needs traditional spell checking.
+

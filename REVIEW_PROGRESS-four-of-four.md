@@ -12204,3 +12204,179 @@ class GrammarChecker {
 
 **Impact**: NO grammar checking. Users get no feedback on grammatical errors. No suggestions for corrections.
 
+
+---
+
+## File 119: CaseConverter.java - COMPLETELY MISSING
+
+**Original Java**: CaseConverter.java (estimated 100-150 lines)
+**Kotlin Implementation**: ❌ DOES NOT EXIST
+**Purpose**: Smart case conversion (lowercase, UPPERCASE, Title Case, camelCase, snake_case)
+**Classification**: ❌ HIGH PRIORITY - Case manipulation missing
+
+### **🐛 BUG #318: CASE CONVERTER COMPLETELY MISSING (HIGH PRIORITY)**
+
+**Expected Java Implementation** (100-150 lines):
+```java
+class CaseConverter {
+    enum CaseStyle {
+        LOWERCASE, UPPERCASE, TITLE_CASE, CAMEL_CASE, SNAKE_CASE, KEBAB_CASE, SENTENCE_CASE
+    }
+    
+    // Convert text to specified case style
+    String convertCase(String text, CaseStyle targetCase) {
+        switch (targetCase) {
+            case LOWERCASE:
+                return text.toLowerCase();
+            case UPPERCASE:
+                return text.toUpperCase();
+            case TITLE_CASE:
+                return toTitleCase(text);
+            case CAMEL_CASE:
+                return toCamelCase(text);
+            case SNAKE_CASE:
+                return toSnakeCase(text);
+            case KEBAB_CASE:
+                return toKebabCase(text);
+            case SENTENCE_CASE:
+                return toSentenceCase(text);
+            default:
+                return text;
+        }
+    }
+    
+    // Cycle through case styles on repeat tap
+    String cycleCase(String text) {
+        if (isLowerCase(text)) return text.toUpperCase();
+        if (isUpperCase(text)) return toTitleCase(text);
+        return text.toLowerCase();
+    }
+    
+    // Smart title case (respect small words)
+    private String toTitleCase(String text) {
+        String[] words = text.split("\\s+");
+        StringBuilder result = new StringBuilder();
+        
+        String[] smallWords = {"a", "an", "the", "and", "but", "or", "for", "nor", "on", "at", "to", "by"};
+        Set<String> smallWordSet = new HashSet<>(Arrays.asList(smallWords));
+        
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i].toLowerCase();
+            
+            // Always capitalize first and last word
+            if (i == 0 || i == words.length - 1 || !smallWordSet.contains(word)) {
+                result.append(capitalize(word));
+            } else {
+                result.append(word);
+            }
+            
+            if (i < words.length - 1) result.append(" ");
+        }
+        
+        return result.toString();
+    }
+}
+```
+
+**Missing Features**:
+1. ❌ **Case cycling** - Tap shift to cycle lowercase → UPPERCASE → Title Case
+2. ❌ **Title case** - Smart capitalization with small word exceptions
+3. ❌ **camelCase conversion** - For code/variables
+4. ❌ **snake_case conversion** - For code/variables
+5. ❌ **kebab-case conversion** - For URLs/filenames
+6. ❌ **Sentence case** - Only capitalize first letter
+7. ❌ **Preserve acronyms** - Keep USA as USA in title case
+
+**Impact**: Users cannot quickly change case. No shift-cycling. Programmers can't convert to camelCase/snake_case.
+
+---
+
+## File 120: TextExpander.java - COMPLETELY MISSING
+
+**Original Java**: TextExpander.java (estimated 200-300 lines)
+**Kotlin Implementation**: ❌ DOES NOT EXIST
+**Purpose**: Text expansion/snippets (shortcuts that expand to full text)
+**Classification**: ❌ HIGH PRIORITY - Productivity feature missing
+
+### **🐛 BUG #319: TEXT EXPANDER COMPLETELY MISSING (HIGH PRIORITY)**
+
+**Expected Java Implementation** (200-300 lines):
+```java
+class TextExpander {
+    private Map<String, Expansion> expansions;
+    
+    static class Expansion {
+        String trigger;
+        String expansion;
+        boolean caseSensitive;
+        boolean wordBoundary; // Only expand if trigger is whole word
+        
+        Expansion(String trigger, String expansion) {
+            this(trigger, expansion, false, true);
+        }
+        
+        Expansion(String trigger, String expansion, boolean caseSensitive, boolean wordBoundary) {
+            this.trigger = trigger;
+            this.expansion = expansion;
+            this.caseSensitive = caseSensitive;
+            this.wordBoundary = wordBoundary;
+        }
+    }
+    
+    // Check if text should be expanded
+    Expansion checkForExpansion(String text, int cursorPosition) {
+        // Extract word before cursor
+        String beforeCursor = text.substring(0, cursorPosition);
+        String currentWord = extractLastWord(beforeCursor);
+        
+        for (Expansion exp : expansions.values()) {
+            if (matches(currentWord, exp)) {
+                return exp;
+            }
+        }
+        
+        return null;
+    }
+    
+    // Perform expansion
+    String performExpansion(String text, int cursorPosition, Expansion expansion) {
+        String beforeCursor = text.substring(0, cursorPosition);
+        String afterCursor = text.substring(cursorPosition);
+        
+        // Replace trigger with expansion
+        int triggerStart = beforeCursor.length() - expansion.trigger.length();
+        return text.substring(0, triggerStart) + expansion.expansion + afterCursor;
+    }
+    
+    // Common default expansions
+    void loadDefaultExpansions() {
+        add("omw", "On my way!");
+        add("brb", "Be right back");
+        add("btw", "By the way,");
+        add("thx", "Thanks!");
+        add("addr", getUserAddress()); // User's address
+        add("email", getUserEmail());
+        add("phone", getUserPhone());
+        add("sig", getUserSignature());
+    }
+    
+    // User-defined custom expansions
+    void addCustomExpansion(String trigger, String expansion) {
+        expansions.put(trigger, new Expansion(trigger, expansion));
+        saveToPreferences();
+    }
+}
+```
+
+**Missing Features**:
+1. ❌ **Text snippets** - Expand shortcuts (brb → Be right back)
+2. ❌ **Custom expansions** - User-defined snippets
+3. ❌ **Default expansions** - Common abbreviations
+4. ❌ **Case preservation** - Expand matching original case
+5. ❌ **Word boundary detection** - Only expand whole words
+6. ❌ **Dynamic expansions** - Insert date/time/clipboard
+7. ❌ **Multi-line expansions** - Templates with newlines
+8. ❌ **Placeholder support** - Cursor positioning after expansion
+
+**Impact**: NO text expansion. Users can't create typing shortcuts. No productivity boost from snippets.
+

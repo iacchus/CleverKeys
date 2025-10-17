@@ -10941,3 +10941,200 @@ RuntimeValidator.kt is an **EXCELLENT implementation** with comprehensive runtim
 **File Count**: 108/251 (43.0%)
 **Bugs**: 307 (1 new minor issue - SimpleDateFormat Locale)
 
+
+---
+
+## File 109: VoiceImeSwitcher.kt (76 lines) - HIGH SEVERITY BUG
+
+**Location**: `src/main/kotlin/tribixbite/keyboard2/VoiceImeSwitcher.kt`
+**Original Java**: File 68 in comparison (VoiceImeSwitcher.java, estimated 150-250 lines)
+**Purpose**: Voice input method switching
+**Classification**: ⚠️ HIGH SEVERITY BUG - Wrong implementation approach
+
+### Implementation Analysis
+
+**✅ What's Present**:
+1. **Voice availability check** (lines 21-25):
+   ```kotlin
+   fun isVoiceInputAvailable(): Boolean {
+       val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+       val activities = context.packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
+       return activities.isNotEmpty()
+   }
+   ```
+   - Uses RecognizerIntent to check for speech recognition apps
+   - Returns true if any speech recognition activity exists
+
+2. **Intent creation** (lines 30-40):
+   ```kotlin
+   fun createVoiceInputIntent(): Intent? {
+       return if (isVoiceInputAvailable()) {
+           Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+               putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+               putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
+               putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
+           }
+       } else null
+   }
+   ```
+   - Creates speech recognition intent
+   - Configures free-form language model
+   - Sets prompt and max results
+
+3. **Voice input activation** (lines 45-60):
+   ```kotlin
+   fun switchToVoiceInput(): Boolean {
+       return try {
+           val intent = createVoiceInputIntent()
+           if (intent != null) {
+               intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+               context.startActivity(intent)
+               true
+           } else {
+               logW("Voice input not available")
+               false
+           }
+       } catch (e: Exception) {
+           logE("Failed to switch to voice input", e)
+           false
+       }
+   }
+   ```
+   - Launches speech recognition activity
+   - Adds FLAG_ACTIVITY_NEW_TASK for context launch
+   - Returns success/failure status
+
+4. **Result processing** (lines 65-67):
+   ```kotlin
+   fun processVoiceResults(data: Intent?): List<String> {
+       return data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) ?: emptyList()
+   }
+   ```
+   - Extracts speech recognition results from Intent
+
+### **🐛 BUG #308: WRONG IMPLEMENTATION APPROACH (HIGH SEVERITY)**
+
+**Root Cause**: This class uses `RecognizerIntent` (speech recognition) instead of proper IME (Input Method Editor) switching.
+
+**What It Actually Does**:
+- Launches a separate speech recognition activity
+- User sees full-screen speech UI overlay
+- Returns results via Intent extras
+- NOT a seamless keyboard switch
+
+**What It SHOULD Do** (proper IME switching):
+```kotlin
+// Correct approach using InputMethodManager
+fun switchToVoiceIME(): Boolean {
+    val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+    val enabledInputMethods = inputMethodManager.enabledInputMethodList
+
+    // Find voice IME (e.g., Google Voice Typing)
+    val voiceIME = enabledInputMethods.find {
+        it.serviceName.contains("voice", ignoreCase = true) ||
+        it.packageName == "com.google.android.googlequicksearchbox"
+    }
+
+    return if (voiceIME != null) {
+        inputMethodManager.setInputMethod(/* current InputMethodService token */, voiceIME.id)
+        true
+    } else {
+        false
+    }
+}
+```
+
+**Problems with Current Implementation**:
+1. **Disruptive UX**: Launches separate activity instead of switching keyboards
+2. **Missing integration**: No way to pass InputMethodService token
+3. **No IME discovery**: Doesn't enumerate installed keyboard IMEs
+4. **No seamless switch**: User sees jarring UI transition
+5. **Manual result handling**: Requires activity result callbacks
+
+**Expected Java Implementation** (150-250 lines):
+- InputMethodManager integration
+- IME enumeration and filtering
+- Token management for IME switching
+- Settings intent for IME configuration
+- Fallback to speech recognition if no voice IME available
+- Proper Android 11+ IME switch APIs
+
+**Impact**: Users cannot seamlessly switch to voice typing keyboard. Instead, they get launched into a separate speech recognition interface that doesn't integrate with the keyboard workflow.
+
+**Fix Required**:
+```kotlin
+class VoiceImeSwitcher(
+    private val context: Context,
+    private val serviceToken: IBinder? = null  // From InputMethodService.getWindow().window.attributes.token
+) {
+    private val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+    fun switchToVoiceIME(): Boolean {
+        val voiceIME = findVoiceIME() ?: return fallbackToSpeechRecognition()
+
+        return try {
+            if (serviceToken != null) {
+                inputMethodManager.setInputMethod(serviceToken, voiceIME.id)
+                true
+            } else {
+                // Fallback: Show IME picker
+                inputMethodManager.showInputMethodPicker()
+                false
+            }
+        } catch (e: Exception) {
+            logE("Failed to switch to voice IME", e)
+            fallbackToSpeechRecognition()
+        }
+    }
+
+    private fun findVoiceIME(): InputMethodInfo? {
+        return inputMethodManager.enabledInputMethodList.find { imeInfo ->
+            imeInfo.serviceName.contains("voice", ignoreCase = true) ||
+            imeInfo.packageName == "com.google.android.googlequicksearchbox" ||
+            // Check IME subtypes for voice input
+            imeInfo.supportedTypes.any { it.mode == "voice" }
+        }
+    }
+
+    private fun fallbackToSpeechRecognition(): Boolean {
+        // Current implementation as fallback
+        return switchToVoiceInput()
+    }
+}
+```
+
+### Missing Features from Java
+
+Based on typical InputMethodService voice integration:
+1. ❌ **InputMethodManager integration** - No IME enumeration
+2. ❌ **Service token management** - Cannot switch IMEs programmatically
+3. ❌ **Voice IME discovery** - No logic to find voice-enabled keyboards
+4. ❌ **IME subtype filtering** - No support for voice subtypes
+5. ❌ **Settings integration** - No IME configuration intents
+6. ❌ **Seamless switching** - Only disruptive activity launch
+7. ❌ **Android 11+ APIs** - No modern IME switch APIs (switchToNextInputMethod)
+8. ❌ **Fallback strategy** - No graceful degradation if voice IME unavailable
+
+### Code Quality Assessment
+
+**Strengths**:
+- Clean error handling with try-catch
+- Proper availability checking before launch
+- Intent extras properly configured
+- Simple result extraction
+
+**Weaknesses**:
+- Fundamentally wrong approach (speech recognition vs IME switching)
+- Missing InputMethodManager integration
+- No service token handling
+- Cannot actually switch between keyboards
+
+### Conclusion
+
+**Bug Count**: 1 critical architectural bug (Bug #308)
+**Severity**: HIGH - Core functionality implemented incorrectly
+**Lines**: 76 lines (vs estimated 150-250 Java lines)
+**Status**: ⚠️ **REQUIRES REWRITE** - Current implementation does not fulfill purpose
+
+**Bug #308**: VoiceImeSwitcher uses RecognizerIntent (speech recognition activity) instead of InputMethodManager (keyboard IME switching). This provides a disruptive user experience where users are taken to a full-screen speech UI instead of seamlessly switching to a voice-enabled keyboard. Requires rewrite to use InputMethodManager.setInputMethod() with proper service token and IME discovery.
+

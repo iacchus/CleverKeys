@@ -22260,3 +22260,433 @@ Continuing with next category...
 
 ---
 
+
+## **CATEGORY F: DEVELOPER TOOLS & DEBUGGING**
+
+---
+
+## **File 186: DebugOverlay.java** (250-350 lines estimated)
+
+**Category**: Category F - Developer Tools & Debugging
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Implements real-time on-screen debugging overlay for development and troubleshooting. Displays touch coordinates, key detection, neural predictions, performance metrics, and system state.
+
+**Missing Functionality**:
+
+1. **Touch Visualization**:
+```java
+public class DebugOverlay extends View {
+    private List<PointF> touchPoints = new ArrayList<>();
+    private Paint touchPaint = new Paint();
+    
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        
+        // Draw touch trail
+        for (int i = 0; i < touchPoints.size() - 1; i++) {
+            PointF p1 = touchPoints.get(i);
+            PointF p2 = touchPoints.get(i + 1);
+            canvas.drawLine(p1.x, p1.y, p2.x, p2.y, touchPaint);
+        }
+        
+        // Draw nearest keys
+        for (PointF point : touchPoints) {
+            List<KeyValue> nearestKeys = detectNearestKeys(point);
+            drawKeyHighlights(canvas, nearestKeys);
+        }
+        
+        // Draw metrics overlay
+        drawMetrics(canvas);
+    }
+    
+    private void drawMetrics(Canvas canvas) {
+        float y = 50f;
+        drawText(canvas, "Touch Points: " + touchPoints.size(), y);
+        y += 30f;
+        drawText(canvas, "Swipe Length: " + calculateSwipeLength(), y);
+        y += 30f;
+        drawText(canvas, "Nearest Keys: " + getCurrentNearestKeys(), y);
+        y += 30f;
+        drawText(canvas, "Prediction Time: " + lastPredictionTime + "ms", y);
+        y += 30f;
+        drawText(canvas, "FPS: " + currentFPS, y);
+    }
+}
+```
+
+2. **Neural Prediction Debug Info**:
+   - Input features (velocity, acceleration, curvature)
+   - Normalized coordinates
+   - Nearest keys tensor (3 closest per point)
+   - Encoder/decoder latencies
+   - Beam search candidates with scores
+   - Vocabulary filter results
+   - Final predictions with confidences
+
+3. **Performance Metrics**:
+   - FPS (frames per second)
+   - Touch event latency (ms)
+   - Prediction latency (ms)
+   - Memory usage (heap, native)
+   - Tensor allocation count
+   - GC pause times
+   - Frame drops
+
+4. **Key Detection Visualization**:
+   - Highlight detected nearest keys
+   - Show QWERTY grid overlay
+   - Display real key positions vs grid
+   - Color-code by distance (green=close, red=far)
+
+5. **Toggle Modes**:
+   - Touch trail only
+   - Metrics only
+   - Full debug (all info)
+   - Off (hidden)
+   - Screenshot mode (save current overlay)
+
+6. **Logging Integration**:
+   - Export debug session to file
+   - Include all touch events
+   - Include all predictions
+   - Include performance metrics
+   - Timestamp everything
+
+**User Impact**: Developers cannot debug swipe typing issues without rebuilding app with custom logging. Users reporting bugs cannot provide detailed information. Difficult to troubleshoot prediction accuracy problems.
+
+**Bug ID**: #388
+
+**Severity**: **LOW** (Developer tool - not end-user feature)
+
+**Fix Required**:
+Create DebugOverlay.kt with real-time touch/prediction visualization.
+
+**Estimated Effort**: 3-4 weeks
+
+---
+
+## **File 187: LogcatExporter.java** (150-200 lines estimated)
+
+**Category**: Category F - Developer Tools & Debugging
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Provides easy export of filtered logcat logs for bug reports. Automatically captures relevant logs with proper filtering and formatting.
+
+**Missing Functionality**:
+
+1. **Log Capture**:
+```java
+public class LogcatExporter {
+    
+    public File captureLogsToFile() throws IOException {
+        // Get logs filtered to CleverKeys only
+        Process process = Runtime.getRuntime().exec(
+            "logcat -d -s CleverKeys:V Onnx:V Neural:V"
+        );
+        
+        // Read output
+        BufferedReader reader = new BufferedReader(
+            new InputStreamReader(process.getInputStream())
+        );
+        
+        // Write to file
+        File logFile = new File(getExternalFilesDir(), 
+                               "cleverkeys_log_" + System.currentTimeMillis() + ".txt");
+        BufferedWriter writer = new BufferedWriter(new FileWriter(logFile));
+        
+        String line;
+        while ((line = reader.readLine()) != null) {
+            writer.write(line);
+            writer.newLine();
+        }
+        
+        writer.close();
+        return logFile;
+    }
+    
+    public void shareLogFile(File logFile, Context context) {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_STREAM, 
+                           FileProvider.getUriForFile(context, logFile));
+        context.startActivity(Intent.createChooser(shareIntent, "Share Logs"));
+    }
+}
+```
+
+2. **Automatic Log Filtering**:
+   - CleverKeys package logs only
+   - ONNX runtime logs
+   - Neural prediction logs
+   - System crash logs (if related)
+   - Exclude sensitive data (clipboard content)
+
+3. **Log Levels**:
+   - Verbose (all messages)
+   - Debug (debug + above)
+   - Info (info + above)
+   - Warning (warning + above)
+   - Error (errors only)
+
+4. **Time Range Selection**:
+   - Last 5 minutes
+   - Last 30 minutes
+   - Last hour
+   - Last session
+   - Custom range
+
+5. **Crash Report Integration**:
+   - Automatic capture on crash
+   - Include stack traces
+   - Include device info
+   - Include app version
+   - Attach to bug report
+
+6. **Privacy Filtering**:
+   - Redact clipboard content
+   - Redact typed text
+   - Redact file paths (show relative only)
+   - Option to review before sharing
+
+**User Impact**: Users cannot easily share logs for bug reports. Developers must provide complex logcat instructions. Bug reports lack critical debugging information.
+
+**Bug ID**: #389
+
+**Severity**: **LOW** (Developer tool - helps bug reporting)
+
+**Fix Required**:
+Create LogcatExporter.kt with automatic filtering and privacy controls.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## **File 188: MemoryProfiler.java** (200-300 lines estimated)
+
+**Category**: Category F - Developer Tools & Debugging
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Comprehensive memory profiling tool for tracking heap usage, native memory, tensor allocations, and memory leaks.
+
+**Missing Functionality**:
+
+1. **Memory Tracking**:
+```java
+public class MemoryProfiler {
+    private List<MemorySnapshot> snapshots = new ArrayList<>();
+    
+    public static class MemorySnapshot {
+        long timestamp;
+        long heapUsed;
+        long heapMax;
+        long nativeUsed;
+        long nativeMax;
+        int tensorCount;
+        long tensorMemory;
+        int bitmapCount;
+        long bitmapMemory;
+        
+        public MemorySnapshot() {
+            timestamp = System.currentTimeMillis();
+            
+            // Java heap
+            Runtime runtime = Runtime.getRuntime();
+            heapUsed = runtime.totalMemory() - runtime.freeMemory();
+            heapMax = runtime.maxMemory();
+            
+            // Native memory
+            Debug.MemoryInfo memInfo = new Debug.MemoryInfo();
+            Debug.getMemoryInfo(memInfo);
+            nativeUsed = memInfo.getNativePrivateDirty() * 1024L;
+            nativeMax = memInfo.getTotalPrivateDirty() * 1024L;
+            
+            // ONNX tensors (from TensorMemoryManager)
+            TensorMemoryStats stats = TensorMemoryManager.getMemoryStats();
+            tensorCount = stats.activeTensors;
+            tensorMemory = stats.totalActiveMemoryBytes;
+        }
+    }
+    
+    public void takeSnapshot() {
+        snapshots.add(new MemorySnapshot());
+        
+        // Detect leaks if snapshot count > threshold
+        if (snapshots.size() > 10) {
+            detectLeaks();
+        }
+    }
+    
+    private void detectLeaks() {
+        // Compare first and last snapshots
+        MemorySnapshot first = snapshots.get(0);
+        MemorySnapshot last = snapshots.get(snapshots.size() - 1);
+        
+        // Check for steady growth
+        long heapGrowth = last.heapUsed - first.heapUsed;
+        long nativeGrowth = last.nativeUsed - first.nativeUsed;
+        
+        if (heapGrowth > 10 * 1024 * 1024) {  // 10MB
+            logW("Potential heap memory leak: " + (heapGrowth / 1024 / 1024) + "MB growth");
+        }
+        
+        if (last.tensorCount > first.tensorCount + 5) {
+            logW("Potential tensor leak: " + (last.tensorCount - first.tensorCount) + " tensors not released");
+        }
+    }
+}
+```
+
+2. **Real-Time Monitoring**:
+   - Live memory graph (last 60 seconds)
+   - Heap usage percentage
+   - Native memory usage
+   - Tensor allocation count
+   - GC event markers
+   - OOM risk indicator
+
+3. **Leak Detection**:
+   - Automated leak detection algorithm
+   - Tensor leak warnings
+   - Bitmap leak warnings
+   - Thread leak detection
+   - Handler leak detection
+
+4. **Memory Reports**:
+   - Export memory timeline to CSV
+   - Generate memory usage chart (PNG)
+   - Detailed breakdown by category
+   - Peak memory usage
+   - Average memory usage
+
+5. **Profiling Sessions**:
+   - Start/stop profiling
+   - Name profiling sessions
+   - Compare sessions
+   - Identify regressions
+
+6. **Integration with Android Profiler**:
+   - Export data in Android Profiler format
+   - Heap dump triggers
+   - Allocation tracking
+
+**User Impact**: Developers cannot diagnose memory leaks or OOM crashes. No visibility into ONNX tensor memory usage. Difficult to optimize memory consumption.
+
+**Bug ID**: #390
+
+**Severity**: **LOW** (Developer tool - memory optimization)
+
+**Fix Required**:
+Create MemoryProfiler.kt with automated leak detection and charting.
+
+**Estimated Effort**: 4-5 weeks
+
+---
+
+## **File 189: NetworkTrafficMonitor.java** (150-200 lines estimated)
+
+**Category**: Category F - Developer Tools & Debugging
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Monitors network traffic for sync operations, API calls, and data usage. Helps debug cloud sync issues and optimize bandwidth usage.
+
+**Missing Functionality**:
+
+1. **Traffic Tracking**:
+```java
+public class NetworkTrafficMonitor {
+    private long totalBytesSent = 0;
+    private long totalBytesReceived = 0;
+    private List<NetworkRequest> requests = new ArrayList<>();
+    
+    public static class NetworkRequest {
+        String url;
+        String method;  // GET, POST, PUT, DELETE
+        long timestamp;
+        int statusCode;
+        long bytesSent;
+        long bytesReceived;
+        long durationMs;
+        boolean success;
+        String errorMessage;
+    }
+    
+    public void recordRequest(NetworkRequest request) {
+        requests.add(request);
+        totalBytesSent += request.bytesSent;
+        totalBytesReceived += request.bytesReceived;
+        
+        // Log if slow
+        if (request.durationMs > 1000) {
+            logW("Slow network request: " + request.url + " took " + request.durationMs + "ms");
+        }
+        
+        // Log if failed
+        if (!request.success) {
+            logE("Failed request: " + request.url + " - " + request.errorMessage);
+        }
+    }
+    
+    public NetworkStats getStats() {
+        return new NetworkStats(
+            totalRequests = requests.size(),
+            successfulRequests = requests.stream().filter(r -> r.success).count(),
+            totalBytesSent = totalBytesSent,
+            totalBytesReceived = totalBytesReceived,
+            averageRequestTime = calculateAverageRequestTime()
+        );
+    }
+}
+```
+
+2. **Request Categories**:
+   - Clipboard sync
+   - Dictionary sync
+   - Theme sync
+   - Settings backup
+   - Analytics events
+   - Crash reports
+   - API calls
+
+3. **Bandwidth Monitoring**:
+   - Real-time upload/download speeds
+   - Data usage by category
+   - WiFi vs cellular breakdown
+   - Background vs foreground usage
+
+4. **Performance Alerts**:
+   - Slow requests (>1s)
+   - Failed requests
+   - High bandwidth usage
+   - Unexpected API calls
+
+5. **Export Reports**:
+   - CSV export of all requests
+   - Network timeline visualization
+   - Bandwidth usage charts
+   - Success/failure statistics
+
+6. **Network Diagnostics**:
+   - Connectivity test
+   - DNS resolution test
+   - API endpoint reachability
+   - SSL certificate validation
+
+**User Impact**: Developers cannot debug sync failures or high data usage. No visibility into network performance. Users experience sync issues with no diagnostic tools.
+
+**Bug ID**: #391
+
+**Severity**: **LOW** (Developer tool - network debugging)
+
+**Fix Required**:
+Create NetworkTrafficMonitor.kt with request tracking and diagnostics.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+

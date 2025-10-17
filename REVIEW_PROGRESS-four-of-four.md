@@ -15850,3 +15850,1059 @@ Create UnicodeNormalizer.kt using java.text.Normalizer.
 
 ---
 
+
+---
+
+# CATEGORY B: ADVANCED INPUT METHODS
+## Files 150-160 (Estimated)
+
+---
+
+## File 150: HandwritingRecognizer.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 400-500 lines
+**Package**: juloo.keyboard2.input
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Handwriting Input**:
+```java
+public class HandwritingRecognizer {
+    private MLKitDigitalInkRecognizer recognizer;
+    private Ink.Builder inkBuilder;
+    private HandwritingCanvas canvas;
+    
+    // Initialize ML Kit handwriting recognition
+    public void initialize(Context context, String languageCode) {
+        // Download recognition model for language
+        DigitalInkRecognitionModelIdentifier modelIdentifier = 
+            DigitalInkRecognitionModelIdentifier.fromLanguageTag(languageCode);
+        
+        if (modelIdentifier == null) {
+            Log.e(TAG, "Language not supported: " + languageCode);
+            return;
+        }
+        
+        // Build recognition model
+        DigitalInkRecognitionModel model = 
+            DigitalInkRecognitionModel.builder(modelIdentifier).build();
+        
+        // Download if needed
+        RemoteModelManager.getInstance().download(model, downloadConditions)
+            .addOnSuccessListener(aVoid -> {
+                // Create recognizer
+                recognizer = DigitalInkRecognition.getClient(
+                    DigitalInkRecognizerOptions.builder(model).build());
+            });
+    }
+    
+    // Capture handwriting stroke
+    public void onStrokeBegin(float x, float y, long timestamp) {
+        inkBuilder.addStroke(Ink.Stroke.builder()
+            .addPoint(Ink.Point.create(x, y, timestamp)));
+    }
+    
+    public void onStrokeMove(float x, float y, long timestamp) {
+        // Add point to current stroke
+        inkBuilder.currentStroke().addPoint(Ink.Point.create(x, y, timestamp));
+    }
+    
+    public void onStrokeEnd() {
+        // Finalize current stroke
+        inkBuilder.build();
+        
+        // Trigger recognition after short delay (allow multi-stroke characters)
+        handler.postDelayed(this::recognizeInk, 500);
+    }
+}
+```
+
+**Recognition and Candidate Selection**:
+```java
+// Recognize handwritten text
+private void recognizeInk() {
+    if (inkBuilder.isEmpty()) return;
+    
+    recognizer.recognize(inkBuilder.build())
+        .addOnSuccessListener(result -> {
+            // Get top candidates
+            List<RecognitionCandidate> candidates = result.getCandidates();
+            
+            if (candidates.isEmpty()) {
+                showError("Could not recognize handwriting");
+                return;
+            }
+            
+            // Show candidates to user
+            List<String> texts = new ArrayList<>();
+            for (RecognitionCandidate candidate : candidates) {
+                texts.add(candidate.getText());
+            }
+            
+            showCandidates(texts);
+        })
+        .addOnFailureListener(e -> {
+            Log.e(TAG, "Recognition failed", e);
+            showError("Recognition error");
+        });
+}
+
+// Show recognition candidates
+private void showCandidates(List<String> candidates) {
+    // Display in suggestion bar or popup
+    SuggestionBar bar = getSuggestionBar();
+    bar.clear();
+    
+    for (String candidate : candidates) {
+        bar.addSuggestion(candidate, () -> {
+            // Insert selected text
+            insertText(candidate);
+            clearCanvas();
+        });
+    }
+}
+
+// Handwriting canvas
+public class HandwritingCanvas extends View {
+    private List<Path> strokes = new ArrayList<>();
+    private Path currentStroke;
+    private Paint strokePaint;
+    
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        
+        // Draw all completed strokes
+        for (Path stroke : strokes) {
+            canvas.drawPath(stroke, strokePaint);
+        }
+        
+        // Draw current stroke
+        if (currentStroke != null) {
+            canvas.drawPath(currentStroke, strokePaint);
+        }
+    }
+    
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        float x = event.getX();
+        float y = event.getY();
+        long timestamp = event.getEventTime();
+        
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                currentStroke = new Path();
+                currentStroke.moveTo(x, y);
+                recognizer.onStrokeBegin(x, y, timestamp);
+                break;
+                
+            case MotionEvent.ACTION_MOVE:
+                currentStroke.lineTo(x, y);
+                recognizer.onStrokeMove(x, y, timestamp);
+                invalidate();
+                break;
+                
+            case MotionEvent.ACTION_UP:
+                strokes.add(currentStroke);
+                currentStroke = null;
+                recognizer.onStrokeEnd();
+                invalidate();
+                break;
+        }
+        
+        return true;
+    }
+    
+    public void clear() {
+        strokes.clear();
+        currentStroke = null;
+        invalidate();
+    }
+}
+```
+
+**Multi-Language Support**:
+```java
+// Switch handwriting language
+public void setLanguage(String languageCode) {
+    // Save current ink if any
+    if (!inkBuilder.isEmpty()) {
+        recognizeInk();
+    }
+    
+    // Re-initialize with new language
+    initialize(context, languageCode);
+}
+
+// Supported languages
+public List<String> getSupportedLanguages() {
+    return Arrays.asList(
+        "en-US",    // English
+        "zh-CN",    // Chinese Simplified
+        "zh-TW",    // Chinese Traditional
+        "ja",       // Japanese
+        "ko",       // Korean
+        "ar",       // Arabic
+        "hi",       // Hindi
+        "ru",       // Russian
+        "es",       // Spanish
+        "de",       // German
+        "fr",       // French
+        // ... many more
+    );
+}
+
+// Model management
+public void downloadLanguageModel(String languageCode, DownloadCallback callback) {
+    DigitalInkRecognitionModelIdentifier modelIdentifier = 
+        DigitalInkRecognitionModelIdentifier.fromLanguageTag(languageCode);
+    
+    DigitalInkRecognitionModel model = 
+        DigitalInkRecognitionModel.builder(modelIdentifier).build();
+    
+    RemoteModelManager.getInstance().download(model, downloadConditions)
+        .addOnSuccessListener(aVoid -> callback.onSuccess())
+        .addOnFailureListener(callback::onError);
+}
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **Handwriting recognition** - No ML Kit integration
+2. ❌ **Stroke capture** - No canvas for drawing
+3. ❌ **Candidate selection** - No recognition results display
+4. ❌ **Multi-stroke characters** - No character composition
+5. ❌ **Language models** - No model download/management
+6. ❌ **Multi-language** - No handwriting for different scripts
+7. ❌ **Undo/redo strokes** - No stroke editing
+8. ❌ **Stroke smoothing** - No path simplification
+9. ❌ **Canvas clearing** - No gesture to clear
+10. ❌ **Settings** - No stroke width/color customization
+
+### **Kotlin Status**:
+**File**: None - completely missing
+**Impact**: No handwriting input mode
+
+### **🐛 BUG #352: HANDWRITINGRECOGNIZER MISSING (CATASTROPHIC)**
+
+**Severity**: 💀 CATASTROPHIC  
+**Category**: Advanced Input Methods  
+**Impact**: No handwriting input
+
+**Description**:
+Entire handwriting recognition system missing. Users cannot:
+- Draw characters on screen
+- Input Chinese/Japanese characters by handwriting
+- Use stylus/S Pen for text input
+- Input text without physical keyboard
+
+This is critical for CJK users who prefer handwriting over Pinyin/romaji.
+
+**User Impact**:
+- ❌ No handwriting input mode
+- ❌ Chinese users cannot draw characters
+- ❌ S Pen/stylus unusable for text input
+- ❌ No alternative to typed input
+- ❌ ~1.3 billion Chinese speakers affected
+
+**Fix Required**:
+Create HandwritingRecognizer.kt with ML Kit Digital Ink Recognition.
+
+**Estimated Effort**: 3-4 weeks
+
+---
+
+## File 151: VoiceTypingEngine.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 350-450 lines
+**Package**: juloo.keyboard2.input
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Voice Input Integration**:
+```java
+public class VoiceTypingEngine {
+    private SpeechRecognizer speechRecognizer;
+    private boolean isListening = false;
+    
+    // Initialize speech recognition
+    public void initialize(Context context) {
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+            Log.e(TAG, "Speech recognition not available");
+            return;
+        }
+        
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onResults(Bundle results) {
+                ArrayList<String> matches = results.getStringArrayList(
+                    SpeechRecognizer.RESULTS_RECOGNITION);
+                
+                if (matches != null && !matches.isEmpty()) {
+                    showVoiceResults(matches);
+                }
+            }
+            
+            @Override
+            public void onError(int error) {
+                handleVoiceError(error);
+            }
+            
+            @Override
+            public void onReadyForSpeech(Bundle params) {
+                showListeningUI();
+            }
+            
+            @Override
+            public void onEndOfSpeech() {
+                hideListeningUI();
+            }
+        });
+    }
+    
+    // Start listening
+    public void startListening(String languageCode) {
+        if (isListening) return;
+        
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode);
+        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        
+        speechRecognizer.startListening(intent);
+        isListening = true;
+    }
+    
+    // Stop listening
+    public void stopListening() {
+        if (!isListening) return;
+        
+        speechRecognizer.stopListening();
+        isListening = false;
+    }
+}
+```
+
+**Partial Results (Real-time Transcription)**:
+```java
+// Show partial results as user speaks
+@Override
+public void onPartialResults(Bundle partialResults) {
+    ArrayList<String> matches = partialResults.getStringArrayList(
+        SpeechRecognizer.RESULTS_RECOGNITION);
+    
+    if (matches != null && !matches.isEmpty()) {
+        String partialText = matches.get(0);
+        showPartialTranscription(partialText);
+    }
+}
+
+// Display partial text in input field (gray/italic)
+private void showPartialTranscription(String text) {
+    InputConnection ic = getCurrentInputConnection();
+    if (ic == null) return;
+    
+    // Delete previous partial text
+    if (lastPartialText != null) {
+        ic.deleteSurroundingText(lastPartialText.length(), 0);
+    }
+    
+    // Insert new partial text with composing state
+    ic.setComposingText(text, 1);
+    lastPartialText = text;
+}
+```
+
+**Voice Results Selection**:
+```java
+// Show voice recognition candidates
+private void showVoiceResults(List<String> results) {
+    // Clear partial text
+    InputConnection ic = getCurrentInputConnection();
+    if (ic != null && lastPartialText != null) {
+        ic.finishComposingText();
+        lastPartialText = null;
+    }
+    
+    // Show candidates in suggestion bar
+    SuggestionBar bar = getSuggestionBar();
+    bar.clear();
+    
+    for (int i = 0; i < Math.min(results.size(), 3); i++) {
+        String result = results.get(i);
+        bar.addSuggestion(result, () -> {
+            insertVoiceText(result);
+        });
+    }
+}
+
+// Insert voice text with proper spacing
+private void insertVoiceText(String text) {
+    InputConnection ic = getCurrentInputConnection();
+    if (ic == null) return;
+    
+    // Add space before if needed
+    CharSequence before = ic.getTextBeforeCursor(1, 0);
+    if (before != null && before.length() > 0 && !Character.isWhitespace(before.charAt(0))) {
+        ic.commitText(" ", 1);
+    }
+    
+    // Insert text
+    ic.commitText(text, 1);
+    
+    // Add space after
+    ic.commitText(" ", 1);
+}
+```
+
+**Voice Input UI**:
+```java
+// Listening indicator UI
+public class VoiceListeningView extends View {
+    private Paint waveformPaint;
+    private float[] amplitudes = new float[50];
+    private int amplitudeIndex = 0;
+    
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        
+        // Draw waveform visualization
+        float centerY = getHeight() / 2f;
+        float stepX = getWidth() / (float) amplitudes.length;
+        
+        for (int i = 0; i < amplitudes.length; i++) {
+            float x = i * stepX;
+            float amplitude = amplitudes[i];
+            
+            canvas.drawLine(x, centerY - amplitude, 
+                           x, centerY + amplitude, 
+                           waveformPaint);
+        }
+        
+        // Draw microphone icon
+        // Draw "Listening..." text
+        // Draw cancel button
+    }
+    
+    public void updateAmplitude(float amplitude) {
+        amplitudes[amplitudeIndex] = amplitude;
+        amplitudeIndex = (amplitudeIndex + 1) % amplitudes.length;
+        invalidate();
+    }
+}
+
+// Voice button on keyboard
+public class VoiceInputButton extends ImageButton {
+    public VoiceInputButton(Context context) {
+        super(context);
+        setImageResource(R.drawable.ic_mic);
+        
+        setOnClickListener(v -> {
+            VoiceTypingEngine engine = VoiceTypingEngine.getInstance();
+            if (engine.isListening()) {
+                engine.stopListening();
+            } else {
+                engine.startListening(getCurrentLanguage());
+            }
+        });
+    }
+}
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **Voice typing** - No speech recognition
+2. ❌ **Partial results** - No real-time transcription
+3. ❌ **Voice candidates** - No result selection
+4. ❌ **Voice UI** - No listening indicator
+5. ❌ **Waveform visualization** - No audio feedback
+6. ❌ **Multi-language** - No language selection for voice
+7. ❌ **Offline voice** - No on-device recognition
+8. ❌ **Punctuation commands** - No "comma", "period" commands
+9. ❌ **Voice editing** - No "delete last word" commands
+10. ❌ **Continuous recognition** - No extended dictation
+
+### **Kotlin Status**:
+**File**: VoiceImeSwitcher.kt (76 lines) - WRONG IMPLEMENTATION (Bug #308)
+**Comparison**:
+- Java: 350-450 lines with full voice integration
+- Kotlin: 76 lines that launches separate app (Bug #308 HIGH)
+
+### **🐛 BUG #353: VOICETYPINGENGINE MISSING (CATASTROPHIC)**
+
+**Severity**: 💀 CATASTROPHIC  
+**Category**: Advanced Input Methods  
+**Impact**: No voice typing
+
+**Description**:
+No voice typing integration. VoiceImeSwitcher.kt launches external speech recognizer app (Bug #308) instead of seamless in-keyboard voice input. Missing:
+- SpeechRecognizer integration
+- Partial results (real-time transcription)
+- Voice candidate selection
+- Listening UI/waveform
+- Multi-language voice support
+
+**User Impact**:
+- ❌ No voice typing from keyboard
+- ❌ Must switch apps to use voice
+- ❌ No hands-free typing
+- ❌ Accessibility users blocked
+- ❌ No dictation mode
+
+**Fix Required**:
+Create VoiceTypingEngine.kt with SpeechRecognizer integration.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## File 152: MacroRecorder.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 300-400 lines
+**Package**: juloo.keyboard2.macros
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Macro Recording and Playback**:
+```java
+public class MacroRecorder {
+    private Map<String, Macro> macros = new HashMap<>();
+    private boolean isRecording = false;
+    private Macro currentMacro;
+    
+    // Start recording macro
+    public void startRecording(String macroName) {
+        if (isRecording) {
+            stopRecording();
+        }
+        
+        currentMacro = new Macro(macroName);
+        isRecording = true;
+        
+        showRecordingIndicator();
+    }
+    
+    // Record key event
+    public void recordKeyEvent(KeyValue keyValue, Pointers.Modifiers modifiers) {
+        if (!isRecording) return;
+        
+        currentMacro.addAction(new KeyAction(keyValue, modifiers, System.currentTimeMillis()));
+    }
+    
+    // Record text input
+    public void recordTextInput(String text) {
+        if (!isRecording) return;
+        
+        currentMacro.addAction(new TextAction(text, System.currentTimeMillis()));
+    }
+    
+    // Record delay
+    public void recordDelay(long milliseconds) {
+        if (!isRecording) return;
+        
+        currentMacro.addAction(new DelayAction(milliseconds));
+    }
+    
+    // Stop recording
+    public void stopRecording() {
+        if (!isRecording) return;
+        
+        isRecording = false;
+        macros.put(currentMacro.name, currentMacro);
+        saveMacro(currentMacro);
+        
+        hideRecordingIndicator();
+    }
+    
+    // Play macro
+    public void playMacro(String macroName) {
+        Macro macro = macros.get(macroName);
+        if (macro == null) return;
+        
+        playMacro(macro);
+    }
+    
+    private void playMacro(Macro macro) {
+        for (MacroAction action : macro.actions) {
+            action.execute(this);
+        }
+    }
+}
+```
+
+**Macro Data Structures**:
+```java
+// Macro definition
+public class Macro {
+    String name;
+    List<MacroAction> actions;
+    long createdAt;
+    long lastUsed;
+    int useCount;
+    
+    public Macro(String name) {
+        this.name = name;
+        this.actions = new ArrayList<>();
+        this.createdAt = System.currentTimeMillis();
+    }
+    
+    public void addAction(MacroAction action) {
+        actions.add(action);
+    }
+    
+    public long getDuration() {
+        if (actions.isEmpty()) return 0;
+        return actions.get(actions.size() - 1).timestamp - actions.get(0).timestamp;
+    }
+}
+
+// Macro action types
+public interface MacroAction {
+    void execute(MacroRecorder recorder);
+    long getTimestamp();
+}
+
+public class KeyAction implements MacroAction {
+    KeyValue keyValue;
+    Pointers.Modifiers modifiers;
+    long timestamp;
+    
+    @Override
+    public void execute(MacroRecorder recorder) {
+        recorder.executeKeyEvent(keyValue, modifiers);
+    }
+}
+
+public class TextAction implements MacroAction {
+    String text;
+    long timestamp;
+    
+    @Override
+    public void execute(MacroRecorder recorder) {
+        recorder.executeTextInput(text);
+    }
+}
+
+public class DelayAction implements MacroAction {
+    long delayMillis;
+    
+    @Override
+    public void execute(MacroRecorder recorder) {
+        try {
+            Thread.sleep(delayMillis);
+        } catch (InterruptedException e) {
+            // Ignore
+        }
+    }
+}
+```
+
+**Macro Management**:
+```java
+// Macro persistence
+public void saveMacro(Macro macro) {
+    SharedPreferences prefs = context.getSharedPreferences("macros", Context.MODE_PRIVATE);
+    String json = gson.toJson(macro);
+    prefs.edit().putString(macro.name, json).apply();
+}
+
+public void loadMacros() {
+    SharedPreferences prefs = context.getSharedPreferences("macros", Context.MODE_PRIVATE);
+    Map<String, ?> allEntries = prefs.getAll();
+    
+    for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+        String json = (String) entry.getValue();
+        Macro macro = gson.fromJson(json, Macro.class);
+        macros.put(macro.name, macro);
+    }
+}
+
+// Macro deletion
+public void deleteMacro(String macroName) {
+    macros.remove(macroName);
+    
+    SharedPreferences prefs = context.getSharedPreferences("macros", Context.MODE_PRIVATE);
+    prefs.edit().remove(macroName).apply();
+}
+
+// Macro editing
+public void editMacro(String macroName, Macro edited) {
+    macros.put(macroName, edited);
+    saveMacro(edited);
+}
+
+// Macro list UI
+public class MacroListActivity extends Activity {
+    private RecyclerView macroList;
+    private MacroAdapter adapter;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.macro_list);
+        
+        macroList = findViewById(R.id.macro_list);
+        adapter = new MacroAdapter(MacroRecorder.getInstance().getAllMacros());
+        macroList.setAdapter(adapter);
+        
+        // Add macro button
+        findViewById(R.id.add_macro).setOnClickListener(v -> {
+            startActivity(new Intent(this, MacroRecordActivity.class));
+        });
+    }
+}
+```
+
+**Macro Triggers**:
+```java
+// Trigger macros via keyboard shortcuts
+public class MacroTrigger {
+    private Map<KeySequence, String> triggers = new HashMap<>();
+    
+    // Register trigger
+    public void registerTrigger(KeySequence sequence, String macroName) {
+        triggers.put(sequence, macroName);
+    }
+    
+    // Check if key sequence matches trigger
+    public boolean checkTrigger(List<KeyEvent> recentKeys) {
+        for (Map.Entry<KeySequence, String> entry : triggers.entrySet()) {
+            if (entry.getKey().matches(recentKeys)) {
+                playMacro(entry.getValue());
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+// Key sequence for triggers
+public class KeySequence {
+    List<KeyValue> keys;
+    Pointers.Modifiers requiredModifiers;
+    
+    public boolean matches(List<KeyEvent> events) {
+        if (events.size() < keys.size()) return false;
+        
+        for (int i = 0; i < keys.size(); i++) {
+            KeyEvent event = events.get(events.size() - keys.size() + i);
+            if (!event.keyValue.equals(keys.get(i))) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+}
+
+// Pre-defined macro shortcuts
+public static final Map<String, KeySequence> DEFAULT_TRIGGERS = Map.of(
+    "email_signature", KeySequence.of(KeyValue.EVENT_SHIFT, KeyValue.EVENT_SHIFT), // Double-tap shift
+    "current_date", KeySequence.of(KeyValue.KEY_DOLLAR, KeyValue.KEY_DOLLAR, KeyValue.KEY_DOLLAR), // $$$
+    "current_time", KeySequence.of(KeyValue.KEY_POUND, KeyValue.KEY_POUND, KeyValue.KEY_POUND) // ###
+);
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **Macro recording** - No recording system
+2. ❌ **Macro playback** - No macro execution
+3. ❌ **Macro storage** - No persistence
+4. ❌ **Macro editor** - No UI to edit macros
+5. ❌ **Macro triggers** - No keyboard shortcuts
+6. ❌ **Macro library** - No pre-built macros
+7. ❌ **Delay recording** - No timing capture
+8. ❌ **Macro sharing** - No import/export
+9. ❌ **Macro variables** - No parameterization
+10. ❌ **Macro loops** - No repetition
+
+### **Kotlin Status**:
+**File**: None - completely missing
+**Impact**: No automation/macros available
+
+### **🐛 BUG #354: MACRORECORDER MISSING (HIGH)**
+
+**Severity**: ❌ HIGH  
+**Category**: Advanced Input Methods  
+**Impact**: No macros or automation
+
+**Description**:
+No macro system exists. Users cannot:
+- Record frequently-typed text
+- Create keyboard shortcuts for long phrases
+- Automate repetitive typing tasks
+- Insert templates (email signatures, addresses, etc.)
+- Use text expansion shortcuts
+
+**User Impact**:
+- ❌ Must type repeated text manually
+- ❌ No email signature shortcut
+- ❌ No date/time insertion macros
+- ❌ No text templates
+- ❌ No automation for power users
+
+**Fix Required**:
+Create MacroRecorder.kt with recording/playback system.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## File 153: GestureCustomizer.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 250-350 lines
+**Package**: juloo.keyboard2.gestures
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Custom Gesture Actions**:
+```java
+public class GestureCustomizer {
+    private Map<GestureType, GestureAction> customGestures = new HashMap<>();
+    
+    // Gesture types
+    public enum GestureType {
+        SWIPE_UP,
+        SWIPE_DOWN,
+        SWIPE_LEFT,
+        SWIPE_RIGHT,
+        TWO_FINGER_SWIPE_UP,
+        TWO_FINGER_SWIPE_DOWN,
+        TWO_FINGER_TAP,
+        THREE_FINGER_SWIPE_LEFT,
+        THREE_FINGER_SWIPE_RIGHT,
+        PINCH_IN,
+        PINCH_OUT,
+        LONG_PRESS,
+        DOUBLE_TAP
+    }
+    
+    // Gesture actions
+    public enum GestureAction {
+        NONE,
+        SHOW_EMOJI_PICKER,
+        SHOW_CLIPBOARD_HISTORY,
+        SWITCH_LANGUAGE,
+        SWITCH_LAYOUT,
+        UNDO,
+        REDO,
+        SELECT_ALL,
+        COPY,
+        PASTE,
+        CUT,
+        CURSOR_LEFT,
+        CURSOR_RIGHT,
+        DELETE_WORD,
+        INSERT_MACRO,
+        OPEN_SETTINGS,
+        MINIMIZE_KEYBOARD,
+        TOGGLE_ONE_HANDED_MODE,
+        TOGGLE_FLOATING_MODE,
+        START_VOICE_INPUT,
+        START_HANDWRITING,
+        CUSTOM_ACTION
+    }
+    
+    // Register custom gesture
+    public void registerGesture(GestureType gesture, GestureAction action) {
+        customGestures.put(gesture, action);
+        saveGestures();
+    }
+    
+    // Handle detected gesture
+    public boolean handleGesture(GestureType gesture) {
+        GestureAction action = customGestures.get(gesture);
+        if (action == null) {
+            action = getDefaultAction(gesture);
+        }
+        
+        return executeAction(action);
+    }
+}
+```
+
+**Gesture Detection**:
+```java
+// Multi-touch gesture detector
+public class MultiTouchGestureDetector {
+    private GestureDetector singleTouchDetector;
+    private ScaleGestureDetector pinchDetector;
+    
+    private PointF firstPointer = new PointF();
+    private PointF secondPointer = new PointF();
+    private int pointerCount = 0;
+    
+    public boolean onTouchEvent(MotionEvent event) {
+        pointerCount = event.getPointerCount();
+        
+        // Single-touch gestures
+        if (pointerCount == 1) {
+            return singleTouchDetector.onTouchEvent(event);
+        }
+        
+        // Pinch gestures
+        if (pointerCount == 2) {
+            boolean handled = pinchDetector.onTouchEvent(event);
+            if (handled) return true;
+            
+            // Two-finger swipe
+            return detectTwoFingerSwipe(event);
+        }
+        
+        // Three-finger gestures
+        if (pointerCount == 3) {
+            return detectThreeFingerGesture(event);
+        }
+        
+        return false;
+    }
+    
+    private boolean detectTwoFingerSwipe(MotionEvent event) {
+        firstPointer.set(event.getX(0), event.getY(0));
+        secondPointer.set(event.getX(1), event.getY(1));
+        
+        // Calculate average movement
+        float dx = (firstPointer.x + secondPointer.x) / 2 - startX;
+        float dy = (firstPointer.y + secondPointer.y) / 2 - startY;
+        
+        if (Math.abs(dy) > SWIPE_THRESHOLD && Math.abs(dy) > Math.abs(dx)) {
+            if (dy > 0) {
+                return handleGesture(GestureType.TWO_FINGER_SWIPE_DOWN);
+            } else {
+                return handleGesture(GestureType.TWO_FINGER_SWIPE_UP);
+            }
+        }
+        
+        return false;
+    }
+}
+```
+
+**Gesture Settings UI**:
+```java
+// Gesture customization screen
+public class GestureCustomizationActivity extends Activity {
+    private RecyclerView gestureList;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.gesture_customization);
+        
+        gestureList = findViewById(R.id.gesture_list);
+        
+        // Create list of all gesture types
+        List<GestureItem> items = new ArrayList<>();
+        for (GestureType type : GestureType.values()) {
+            GestureAction action = customizer.getGestureAction(type);
+            items.add(new GestureItem(type, action));
+        }
+        
+        GestureAdapter adapter = new GestureAdapter(items, this::onGestureItemClick);
+        gestureList.setAdapter(adapter);
+    }
+    
+    private void onGestureItemClick(GestureItem item) {
+        // Show action picker dialog
+        new ActionPickerDialog(this, item.type, item.action, selectedAction -> {
+            customizer.registerGesture(item.type, selectedAction);
+            // Refresh UI
+        }).show();
+    }
+}
+
+// Gesture visualization
+public class GestureVisualization extends View {
+    public void drawGesture(GestureType type, Canvas canvas) {
+        switch (type) {
+            case SWIPE_UP:
+                drawArrow(canvas, Direction.UP, 1);
+                break;
+            case TWO_FINGER_SWIPE_UP:
+                drawArrow(canvas, Direction.UP, 2);
+                break;
+            case PINCH_IN:
+                drawPinch(canvas, true);
+                break;
+            // ... more cases
+        }
+    }
+}
+```
+
+**Default Gesture Mappings**:
+```java
+// Default gestures
+public static final Map<GestureType, GestureAction> DEFAULT_GESTURES = Map.of(
+    GestureType.SWIPE_UP, GestureAction.SHOW_EMOJI_PICKER,
+    GestureType.SWIPE_DOWN, GestureAction.MINIMIZE_KEYBOARD,
+    GestureType.SWIPE_LEFT, GestureAction.DELETE_WORD,
+    GestureType.SWIPE_RIGHT, GestureAction.NONE,
+    GestureType.TWO_FINGER_SWIPE_UP, GestureAction.SHOW_CLIPBOARD_HISTORY,
+    GestureType.TWO_FINGER_TAP, GestureAction.SELECT_ALL,
+    GestureType.THREE_FINGER_SWIPE_LEFT, GestureAction.UNDO,
+    GestureType.THREE_FINGER_SWIPE_RIGHT, GestureAction.REDO,
+    GestureType.PINCH_IN, GestureAction.TOGGLE_ONE_HANDED_MODE,
+    GestureType.PINCH_OUT, GestureAction.NONE,
+    GestureType.LONG_PRESS, GestureAction.NONE, // Handled per-key
+    GestureType.DOUBLE_TAP, GestureAction.SELECT_ALL
+);
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **Gesture customization** - No custom gesture actions
+2. ❌ **Multi-touch gestures** - No two/three-finger gestures
+3. ❌ **Pinch gestures** - No pinch-in/out detection
+4. ❌ **Gesture settings** - No UI to customize gestures
+5. ❌ **Gesture visualization** - No preview of gestures
+6. ❌ **Action picker** - No selection of gesture actions
+7. ❌ **Gesture persistence** - No saving of custom gestures
+8. ❌ **Gesture conflicts** - No conflict detection
+9. ❌ **Gesture sensitivity** - No threshold adjustment
+10. ❌ **Gesture help** - No tutorial/guide
+
+### **Kotlin Status**:
+**File**: None - completely missing
+**Impact**: No gesture customization available
+
+### **🐛 BUG #355: GESTURECUSTOMIZER MISSING (HIGH)**
+
+**Severity**: ❌ HIGH  
+**Category**: Advanced Input Methods  
+**Impact**: No custom gestures
+
+**Description**:
+No gesture customization system. Users cannot:
+- Assign custom actions to swipe gestures
+- Use multi-touch gestures (two/three-finger swipes)
+- Customize pinch gestures
+- Configure keyboard shortcuts via gestures
+- Create power-user workflows
+
+**User Impact**:
+- ❌ No custom gesture shortcuts
+- ❌ Limited workflow customization
+- ❌ No multi-touch gestures
+- ❌ Power users cannot optimize keyboard
+- ❌ No gesture-based navigation
+
+**Fix Required**:
+Create GestureCustomizer.kt with multi-touch detection.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+

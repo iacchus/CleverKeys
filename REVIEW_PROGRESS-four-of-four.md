@@ -15014,3 +15014,839 @@ Create IMELanguageSelector.kt with full UI components.
 
 ---
 
+## File 146: TranslationEngine.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 300-400 lines
+**Package**: juloo.keyboard2.translation
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Translation Integration**:
+```java
+public class TranslationEngine {
+    private Map<String, TranslationProvider> providers;
+    private TranslationCache cache;
+    
+    // Inline translation (select text → translate)
+    public void translateSelection(CharSequence text, 
+                                   String sourceLang,
+                                   String targetLang,
+                                   TranslationCallback callback) {
+        // Check cache first
+        String cacheKey = generateCacheKey(text, sourceLang, targetLang);
+        if (cache.has(cacheKey)) {
+            callback.onSuccess(cache.get(cacheKey));
+            return;
+        }
+        
+        // Call translation API
+        TranslationProvider provider = getActiveProvider();
+        provider.translate(text, sourceLang, targetLang, new TranslationProvider.Callback() {
+            @Override
+            public void onSuccess(String translation) {
+                cache.put(cacheKey, translation);
+                callback.onSuccess(translation);
+            }
+            
+            @Override
+            public void onError(Exception e) {
+                callback.onError(e);
+            }
+        });
+    }
+    
+    // Auto-detect source language
+    public void detectLanguage(CharSequence text, DetectionCallback callback) {
+        // Statistical analysis
+        // Character set detection
+        // Word pattern matching
+        // Call language detection API if needed
+    }
+}
+```
+
+**Translation Providers**:
+```java
+// Multiple backend support
+public interface TranslationProvider {
+    void translate(CharSequence text, 
+                   String sourceLang,
+                   String targetLang,
+                   Callback callback);
+}
+
+public class GoogleTranslateProvider implements TranslationProvider {
+    private static final String API_ENDPOINT = "https://translation.googleapis.com/language/translate/v2";
+    private String apiKey;
+    
+    @Override
+    public void translate(CharSequence text, String sourceLang, String targetLang, Callback callback) {
+        // Build request
+        JSONObject request = new JSONObject();
+        request.put("q", text.toString());
+        request.put("source", sourceLang);
+        request.put("target", targetLang);
+        request.put("format", "text");
+        
+        // HTTP POST to Google Translate API
+        HttpClient.post(API_ENDPOINT)
+            .header("Authorization", "Bearer " + apiKey)
+            .body(request.toString())
+            .execute(response -> {
+                JSONObject result = new JSONObject(response.body());
+                String translation = result.getJSONObject("data")
+                    .getJSONArray("translations")
+                    .getJSONObject(0)
+                    .getString("translatedText");
+                callback.onSuccess(translation);
+            });
+    }
+}
+
+// Offline translation (local models)
+public class OfflineTranslationProvider implements TranslationProvider {
+    private MLKitTranslator translator;
+    
+    @Override
+    public void translate(CharSequence text, String sourceLang, String targetLang, Callback callback) {
+        // Check if language models are downloaded
+        if (!isModelDownloaded(sourceLang, targetLang)) {
+            callback.onError(new ModelNotDownloadedException());
+            return;
+        }
+        
+        // Use ML Kit for on-device translation
+        translator.translate(text.toString())
+            .addOnSuccessListener(callback::onSuccess)
+            .addOnFailureListener(callback::onError);
+    }
+}
+```
+
+**Translation UI**:
+```java
+// Translation popup
+public class TranslationPopup extends PopupWindow {
+    private TextView sourceText;
+    private TextView translatedText;
+    private Spinner languageSpinner;
+    private ImageButton playButton;  // Text-to-speech
+    private ImageButton copyButton;
+    
+    public void showTranslation(View anchor, String text, String translation) {
+        sourceText.setText(text);
+        translatedText.setText(translation);
+        
+        // Show popup above selection
+        showAtLocation(anchor, Gravity.NO_GRAVITY, x, y);
+        
+        // Copy translation button
+        copyButton.setOnClickListener(v -> {
+            ClipboardManager clipboard = (ClipboardManager)
+                context.getSystemService(Context.CLIPBOARD_SERVICE);
+            clipboard.setPrimaryClip(ClipData.newPlainText("translation", translation));
+            Toast.makeText(context, "Translation copied", Toast.LENGTH_SHORT).show();
+        });
+        
+        // Text-to-speech
+        playButton.setOnClickListener(v -> {
+            TextToSpeech tts = new TextToSpeech(context, status -> {
+                if (status == TextToSpeech.SUCCESS) {
+                    tts.setLanguage(getLocaleForLanguage(targetLang));
+                    tts.speak(translation, TextToSpeech.QUEUE_FLUSH, null, null);
+                }
+            });
+        });
+    }
+}
+
+// Translation cache
+public class TranslationCache {
+    private LruCache<String, String> cache;
+    private long maxCacheAge = TimeUnit.DAYS.toMillis(7);
+    
+    public void put(String key, String translation) {
+        cache.put(key, translation);
+        saveToDisk(key, translation);
+    }
+    
+    public String get(String key) {
+        String cached = cache.get(key);
+        if (cached != null) return cached;
+        
+        // Check disk cache
+        return loadFromDisk(key);
+    }
+}
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **Inline translation** - No translation of selected text
+2. ❌ **Auto language detection** - No source language detection
+3. ❌ **Translation providers** - No Google Translate/ML Kit integration
+4. ❌ **Offline translation** - No on-device models
+5. ❌ **Translation cache** - No caching of translations
+6. ❌ **Translation UI** - No popup to show translations
+7. ❌ **Text-to-speech** - No audio playback of translations
+8. ❌ **Copy translation** - No quick copy button
+9. ❌ **Translation history** - No saved translations
+10. ❌ **Model management** - No download/update of offline models
+
+### **Kotlin Status**:
+**File**: None - completely missing
+**Impact**: No translation features available
+
+### **🐛 BUG #348: TRANSLATIONENGINE MISSING (MEDIUM)**
+
+**Severity**: ⚠️ MEDIUM  
+**Category**: Multi-Language Support  
+**Impact**: No inline translation
+
+**Description**:
+No translation engine exists. Users cannot:
+- Translate selected text
+- Use Google Translate integration
+- Download offline translation models
+- Get text-to-speech for translations
+
+**User Impact**:
+- ❌ Cannot translate text within keyboard
+- ❌ Must leave app to translate
+- ❌ No multilingual support for content
+- ❌ No offline translation
+
+**Fix Required**:
+Create TranslationEngine.kt with API integration.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## File 147: RTLLanguageHandler.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 200-300 lines
+**Package**: juloo.keyboard2.language
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Right-to-Left Text Support**:
+```java
+public class RTLLanguageHandler {
+    private Set<String> rtlLanguages = Set.of("ar", "he", "fa", "ur", "yi");
+    
+    // Detect if language is RTL
+    public boolean isRTL(String languageCode) {
+        return rtlLanguages.contains(languageCode);
+    }
+    
+    // Text direction for current language
+    public int getTextDirection(String languageCode) {
+        return isRTL(languageCode) ? 
+            View.TEXT_DIRECTION_RTL : 
+            View.TEXT_DIRECTION_LTR;
+    }
+    
+    // Apply RTL layout
+    public void applyRTLLayout(View view, String languageCode) {
+        if (isRTL(languageCode)) {
+            view.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+            view.setTextDirection(View.TEXT_DIRECTION_RTL);
+            
+            // Flip suggestion bar
+            if (view instanceof SuggestionBar) {
+                ((SuggestionBar) view).reverseChildOrder();
+            }
+            
+            // Flip keyboard row direction
+            if (view instanceof KeyboardRow) {
+                ((KeyboardRow) view).setRTLMode(true);
+            }
+        }
+    }
+}
+```
+
+**Bidirectional Text (BiDi)**:
+```java
+// Handle mixed LTR/RTL text (English + Arabic)
+public class BiDiTextHandler {
+    
+    // Unicode BiDi algorithm
+    public CharSequence processBiDiText(CharSequence text, String languageCode) {
+        Bidi bidi = new Bidi(text.toString(), 
+            isRTL(languageCode) ? Bidi.DIRECTION_RIGHT_TO_LEFT : Bidi.DIRECTION_LEFT_TO_RIGHT);
+        
+        if (!bidi.isMixed()) {
+            return text; // Pure LTR or RTL
+        }
+        
+        // Mixed text - apply BiDi marks
+        StringBuilder processed = new StringBuilder();
+        for (int i = 0; i < bidi.getRunCount(); i++) {
+            int start = bidi.getRunStart(i);
+            int end = bidi.getRunLimit(i);
+            int level = bidi.getRunLevel(i);
+            
+            if (level % 2 == 0) {
+                // LTR run - add LRM (Left-to-Right Mark)
+                processed.append('\u200E');
+            } else {
+                // RTL run - add RLM (Right-to-Left Mark)
+                processed.append('\u200F');
+            }
+            
+            processed.append(text.subSequence(start, end));
+        }
+        
+        return processed.toString();
+    }
+}
+```
+
+**RTL Keyboard Layout**:
+```java
+// Mirror keyboard for RTL languages
+public class RTLKeyboardLayout {
+    
+    // Reverse key positions for RTL
+    public KeyboardData mirrorLayout(KeyboardData layout, String languageCode) {
+        if (!isRTL(languageCode)) {
+            return layout;
+        }
+        
+        // Create mirrored layout
+        KeyboardData mirrored = new KeyboardData();
+        
+        for (Row row : layout.rows) {
+            Row mirroredRow = new Row();
+            
+            // Reverse key order
+            for (int i = row.keys.size() - 1; i >= 0; i--) {
+                Key key = row.keys.get(i);
+                
+                // Mirror shift key position
+                if (key.key == Modifier.SHIFT) {
+                    // Move from left to right or vice versa
+                    key.shift = invertShift(key.shift);
+                }
+                
+                mirroredRow.keys.add(key);
+            }
+            
+            mirrored.rows.add(mirroredRow);
+        }
+        
+        return mirrored;
+    }
+    
+    // Invert horizontal positioning
+    private float invertShift(float shift) {
+        // If key is shifted right, shift it left by same amount
+        return -shift;
+    }
+}
+
+// RTL gesture handling
+public class RTLGestureHandler {
+    
+    // Invert swipe direction for RTL
+    public SwipeInput mirrorSwipeInput(SwipeInput input, String languageCode) {
+        if (!isRTL(languageCode)) {
+            return input;
+        }
+        
+        // Flip X coordinates
+        List<PointF> mirroredPoints = new ArrayList<>();
+        float keyboardWidth = getKeyboardWidth();
+        
+        for (PointF point : input.coordinates) {
+            PointF mirrored = new PointF(
+                keyboardWidth - point.x,  // Flip X
+                point.y                    // Keep Y
+            );
+            mirroredPoints.add(mirrored);
+        }
+        
+        return new SwipeInput(mirroredPoints, input.timestamps, input.nearestKeys);
+    }
+}
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **RTL detection** - No right-to-left language detection
+2. ❌ **RTL layout** - No view direction flipping
+3. ❌ **BiDi text** - No bidirectional text support
+4. ❌ **RTL keyboard layout** - No mirrored key positions
+5. ❌ **RTL gestures** - Swipe coordinates not flipped
+6. ❌ **RTL suggestion bar** - Suggestions display left-to-right only
+7. ❌ **Arabic shaping** - No contextual letter forms
+8. ❌ **Hebrew niqqud** - No diacritical marks
+9. ❌ **Persian keyboard** - No Farsi layout
+10. ❌ **Urdu support** - No Urdu script handling
+
+### **Kotlin Status**:
+**File**: None - completely missing
+**Impact**: Arabic/Hebrew users cannot type correctly
+
+### **🐛 BUG #349: RTLLANGUAGEHANDLER MISSING (CATASTROPHIC)**
+
+**Severity**: 💀 CATASTROPHIC  
+**Category**: Multi-Language Support  
+**Impact**: RTL languages completely broken
+
+**Description**:
+No RTL support exists. Arabic, Hebrew, Farsi, Urdu speakers cannot use the keyboard:
+- Text displays left-to-right (wrong direction)
+- Keyboard layout not mirrored
+- Swipe gestures interpret coordinates as LTR
+- Suggestion bar shows reversed order
+- BiDi text (mixed English/Arabic) displays incorrectly
+
+**User Impact**:
+- ❌ Arabic text displays backwards: "ﺎﺒﺣﺮﻣ" becomes "مرحبا"
+- ❌ Hebrew text unreadable
+- ❌ Swipe typing completely broken for RTL
+- ❌ ~420 million Arabic speakers blocked
+- ❌ ~9 million Hebrew speakers blocked
+
+**Fix Required**:
+Create RTLLanguageHandler.kt with full BiDi support.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## File 148: CharacterSetManager.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 250-350 lines
+**Package**: juloo.keyboard2.language
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Character Set Detection**:
+```java
+public class CharacterSetManager {
+    
+    // Detect which character sets are present in text
+    public Set<CharacterSet> detectCharacterSets(CharSequence text) {
+        Set<CharacterSet> sets = new HashSet<>();
+        
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            int codePoint = Character.codePointAt(text, i);
+            
+            // Latin characters (A-Z, a-z, accented)
+            if (isLatin(codePoint)) {
+                sets.add(CharacterSet.LATIN);
+            }
+            
+            // Cyrillic (Russian, Ukrainian, Bulgarian, etc.)
+            if (isCyrillic(codePoint)) {
+                sets.add(CharacterSet.CYRILLIC);
+            }
+            
+            // Arabic
+            if (isArabic(codePoint)) {
+                sets.add(CharacterSet.ARABIC);
+            }
+            
+            // Hebrew
+            if (isHebrew(codePoint)) {
+                sets.add(CharacterSet.HEBREW);
+            }
+            
+            // CJK (Chinese, Japanese, Korean)
+            if (isCJK(codePoint)) {
+                sets.add(CharacterSet.CJK);
+            }
+            
+            // Devanagari (Hindi, Sanskrit, Marathi)
+            if (isDevanagari(codePoint)) {
+                sets.add(CharacterSet.DEVANAGARI);
+            }
+            
+            // Greek
+            if (isGreek(codePoint)) {
+                sets.add(CharacterSet.GREEK);
+            }
+            
+            // Thai
+            if (isThai(codePoint)) {
+                sets.add(CharacterSet.THAI);
+            }
+        }
+        
+        return sets;
+    }
+    
+    // Unicode block detection
+    private boolean isLatin(int codePoint) {
+        return (codePoint >= 0x0041 && codePoint <= 0x007A) ||      // Basic Latin
+               (codePoint >= 0x00C0 && codePoint <= 0x00FF) ||      // Latin-1 Supplement
+               (codePoint >= 0x0100 && codePoint <= 0x017F) ||      // Latin Extended-A
+               (codePoint >= 0x0180 && codePoint <= 0x024F) ||      // Latin Extended-B
+               (codePoint >= 0x1E00 && codePoint <= 0x1EFF);        // Latin Extended Additional
+    }
+    
+    private boolean isCyrillic(int codePoint) {
+        return (codePoint >= 0x0400 && codePoint <= 0x04FF) ||      // Cyrillic
+               (codePoint >= 0x0500 && codePoint <= 0x052F) ||      // Cyrillic Supplement
+               (codePoint >= 0x2DE0 && codePoint <= 0x2DFF);        // Cyrillic Extended-A
+    }
+    
+    private boolean isArabic(int codePoint) {
+        return (codePoint >= 0x0600 && codePoint <= 0x06FF) ||      // Arabic
+               (codePoint >= 0x0750 && codePoint <= 0x077F) ||      // Arabic Supplement
+               (codePoint >= 0x08A0 && codePoint <= 0x08FF) ||      // Arabic Extended-A
+               (codePoint >= 0xFB50 && codePoint <= 0xFDFF) ||      // Arabic Presentation Forms-A
+               (codePoint >= 0xFE70 && codePoint <= 0xFEFF);        // Arabic Presentation Forms-B
+    }
+    
+    private boolean isCJK(int codePoint) {
+        return (codePoint >= 0x4E00 && codePoint <= 0x9FFF) ||      // CJK Unified Ideographs
+               (codePoint >= 0x3400 && codePoint <= 0x4DBF) ||      // CJK Unified Ideographs Extension A
+               (codePoint >= 0x20000 && codePoint <= 0x2A6DF) ||    // CJK Unified Ideographs Extension B
+               (codePoint >= 0x3040 && codePoint <= 0x309F) ||      // Hiragana
+               (codePoint >= 0x30A0 && codePoint <= 0x30FF) ||      // Katakana
+               (codePoint >= 0xAC00 && codePoint <= 0xD7AF);        // Hangul Syllables
+    }
+}
+```
+
+**Character Filtering**:
+```java
+// Filter text to specific character set
+public CharSequence filterToCharacterSet(CharSequence text, CharacterSet targetSet) {
+    StringBuilder filtered = new StringBuilder();
+    
+    for (int i = 0; i < text.length(); i++) {
+        int codePoint = Character.codePointAt(text, i);
+        
+        if (belongsToCharacterSet(codePoint, targetSet)) {
+            filtered.appendCodePoint(codePoint);
+        }
+    }
+    
+    return filtered.toString();
+}
+
+// Character set conversion
+public CharSequence convertCharacterSet(CharSequence text, 
+                                        CharacterSet source,
+                                        CharacterSet target) {
+    // Transliteration (e.g., Cyrillic → Latin)
+    if (source == CharacterSet.CYRILLIC && target == CharacterSet.LATIN) {
+        return transliterateCyrillicToLatin(text);
+    }
+    
+    // Arabic → Latin
+    if (source == CharacterSet.ARABIC && target == CharacterSet.LATIN) {
+        return transliterateArabicToLatin(text);
+    }
+    
+    // Japanese → Romaji
+    if (source == CharacterSet.CJK && target == CharacterSet.LATIN) {
+        return transliterateJapaneseToRomaji(text);
+    }
+    
+    return text;
+}
+
+// Transliteration tables
+private static final Map<Character, String> CYRILLIC_TO_LATIN = Map.of(
+    'а', "a",  'б', "b",  'в', "v",  'г', "g",  'д', "d",
+    'е', "e",  'ё', "yo", 'ж', "zh", 'з', "z",  'и', "i",
+    'й', "y",  'к', "k",  'л', "l",  'м', "m",  'н', "n",
+    'о', "o",  'п', "p",  'р', "r",  'с', "s",  'т', "t",
+    'у', "u",  'ф', "f",  'х', "h",  'ц', "ts", 'ч', "ch",
+    'ш', "sh", 'щ', "sch",'ъ', "",   'ы', "y",  'ь', "",
+    'э', "e",  'ю', "yu", 'я', "ya"
+);
+```
+
+**Script Detection for Input**:
+```java
+// Determine appropriate keyboard layout based on input
+public String suggestKeyboardLayout(CharSequence recentInput) {
+    Set<CharacterSet> sets = detectCharacterSets(recentInput);
+    
+    if (sets.contains(CharacterSet.CYRILLIC)) {
+        return "russian_qwerty";
+    }
+    if (sets.contains(CharacterSet.ARABIC)) {
+        return "arabic_qwerty";
+    }
+    if (sets.contains(CharacterSet.HEBREW)) {
+        return "hebrew_qwerty";
+    }
+    if (sets.contains(CharacterSet.CJK)) {
+        // Determine if Chinese, Japanese, or Korean
+        if (hasHiraganaKatakana(recentInput)) {
+            return "japanese_qwerty";
+        }
+        if (hasHangul(recentInput)) {
+            return "korean_qwerty";
+        }
+        return "chinese_pinyin";
+    }
+    
+    return "latin_qwerty";
+}
+
+// Keyboard compatibility check
+public boolean isCharacterSupportedByLayout(char c, String layoutName) {
+    CharacterSet charSet = getCharacterSet(c);
+    Set<CharacterSet> layoutSets = getLayoutCharacterSets(layoutName);
+    
+    return layoutSets.contains(charSet);
+}
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **Character set detection** - No Unicode block analysis
+2. ❌ **Script detection** - Cannot identify Cyrillic/Arabic/CJK/etc.
+3. ❌ **Character filtering** - No script-specific filtering
+4. ❌ **Transliteration** - No script conversion (Cyrillic→Latin)
+5. ❌ **Layout suggestion** - Cannot auto-suggest keyboard based on input
+6. ❌ **Character validation** - No layout compatibility checking
+7. ❌ **Multi-script text** - No handling of mixed scripts
+8. ❌ **Script switching** - No automatic keyboard switching
+9. ❌ **Romanization** - No Japanese/Chinese→Romaji
+10. ❌ **Unicode normalization** - No NFC/NFD handling
+
+### **Kotlin Status**:
+**File**: None - completely missing
+**Impact**: No script/character set management
+
+### **🐛 BUG #350: CHARACTERSETMANAGER MISSING (HIGH)**
+
+**Severity**: ❌ HIGH  
+**Category**: Multi-Language Support  
+**Impact**: Cannot handle multiple scripts
+
+**Description**:
+No character set management system. Cannot:
+- Detect which scripts are in use (Latin, Cyrillic, Arabic, etc.)
+- Validate characters against keyboard layout
+- Suggest appropriate keyboard for input context
+- Convert between scripts (transliteration)
+- Handle mixed-script text
+
+**User Impact**:
+- ❌ Cannot auto-switch keyboard for different scripts
+- ❌ No transliteration support
+- ❌ Mixed-language text handling broken
+- ❌ No character validation
+
+**Fix Required**:
+Create CharacterSetManager.kt with Unicode block detection.
+
+**Estimated Effort**: 1-2 weeks
+
+---
+
+## File 149: UnicodeNormalizer.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 150-250 lines
+**Package**: juloo.keyboard2.language
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Unicode Normalization**:
+```java
+public class UnicodeNormalizer {
+    
+    // Normalize text to NFC (Canonical Decomposition, followed by Canonical Composition)
+    public CharSequence normalizeNFC(CharSequence text) {
+        return Normalizer.normalize(text, Normalizer.Form.NFC);
+    }
+    
+    // Normalize text to NFD (Canonical Decomposition)
+    public CharSequence normalizeNFD(CharSequence text) {
+        return Normalizer.normalize(text, Normalizer.Form.NFD);
+    }
+    
+    // Normalize for comparison (case-insensitive, accent-insensitive)
+    public CharSequence normalizeForComparison(CharSequence text) {
+        // NFD decomposition
+        String decomposed = Normalizer.normalize(text, Normalizer.Form.NFD);
+        
+        // Remove combining diacritical marks
+        String withoutAccents = decomposed.replaceAll("\\p{M}", "");
+        
+        // Lowercase
+        return withoutAccents.toLowerCase();
+    }
+}
+```
+
+**Combining Characters**:
+```java
+// Handle combining diacritical marks
+public class CombiningCharacterHandler {
+    
+    // Detect if character is a combining mark
+    public boolean isCombiningCharacter(char c) {
+        int type = Character.getType(c);
+        return type == Character.COMBINING_SPACING_MARK ||
+               type == Character.NON_SPACING_MARK ||
+               type == Character.ENCLOSING_MARK;
+    }
+    
+    // Split base character and combining marks
+    public CharacterComponents decompose(CharSequence text, int index) {
+        char base = text.charAt(index);
+        List<Character> combiningMarks = new ArrayList<>();
+        
+        // Collect combining marks after base character
+        for (int i = index + 1; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (isCombiningCharacter(c)) {
+                combiningMarks.add(c);
+            } else {
+                break;
+            }
+        }
+        
+        return new CharacterComponents(base, combiningMarks);
+    }
+    
+    public static class CharacterComponents {
+        char baseCharacter;
+        List<Character> combiningMarks;
+        
+        // Reconstruct full character
+        public String compose() {
+            StringBuilder sb = new StringBuilder();
+            sb.append(baseCharacter);
+            for (char mark : combiningMarks) {
+                sb.append(mark);
+            }
+            return sb.toString();
+        }
+    }
+}
+```
+
+**Normalization for Autocorrection**:
+```java
+// Normalize for dictionary lookup
+public class DictionaryNormalizer {
+    
+    // Convert accented characters to base form for fuzzy matching
+    public String normalizeForDictionary(String word) {
+        // NFD decomposition
+        String decomposed = Normalizer.normalize(word, Normalizer.Form.NFD);
+        
+        // Remove accents
+        String withoutAccents = decomposed.replaceAll("\\p{M}", "");
+        
+        // Lowercase
+        String lowercase = withoutAccents.toLowerCase();
+        
+        // Replace special characters
+        lowercase = lowercase.replace('æ', 'e');  // æ → e
+        lowercase = lowercase.replace('œ', 'e');  // œ → e
+        lowercase = lowercase.replace('ß', 's');  // ß → ss
+        lowercase = lowercase.replace('ð', 'd');  // ð → d
+        lowercase = lowercase.replace('þ', 'p');  // þ → p
+        
+        return lowercase;
+    }
+    
+    // Compare words ignoring accents
+    public boolean equalsIgnoringAccents(String word1, String word2) {
+        return normalizeForDictionary(word1).equals(normalizeForDictionary(word2));
+    }
+}
+
+// Precomposed vs decomposed comparison
+public class UnicodeComparator {
+    
+    // Check if two strings are equivalent under NFC/NFD
+    public boolean areEquivalent(CharSequence text1, CharSequence text2) {
+        String nfc1 = Normalizer.normalize(text1, Normalizer.Form.NFC);
+        String nfc2 = Normalizer.normalize(text2, Normalizer.Form.NFC);
+        return nfc1.equals(nfc2);
+    }
+    
+    // Example: "é" (U+00E9) vs "é" (U+0065 U+0301)
+    // Precomposed:  é (single codepoint)
+    // Decomposed:   e + ́ (base + combining acute)
+    // Should be treated as equal!
+}
+```
+
+**Normalization for Storage**:
+```java
+// Ensure consistent storage format
+public class StorageNormalizer {
+    
+    // Always store in NFC (precomposed form)
+    public String normalizeForStorage(String text) {
+        return Normalizer.normalize(text, Normalizer.Form.NFC);
+    }
+    
+    // Validate stored data
+    public boolean isNormalized(String text, Normalizer.Form form) {
+        return Normalizer.isNormalized(text, form);
+    }
+}
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **NFC normalization** - No canonical composition
+2. ❌ **NFD normalization** - No canonical decomposition
+3. ❌ **Combining characters** - No diacritical mark handling
+4. ❌ **Accent removal** - No base character extraction
+5. ❌ **Dictionary normalization** - Autocorrect may fail on accented words
+6. ❌ **Equivalence checking** - é ≠ é (precomposed vs decomposed)
+7. ❌ **Storage normalization** - Inconsistent data format
+8. ❌ **Comparison normalization** - Search may miss results
+9. ❌ **Character decomposition** - Cannot split base+marks
+10. ❌ **Validation** - No normalization checking
+
+### **Kotlin Status**:
+**File**: None - completely missing
+**Impact**: Accented character handling broken
+
+### **🐛 BUG #351: UNICODENORMALIZER MISSING (HIGH)**
+
+**Severity**: ❌ HIGH  
+**Category**: Multi-Language Support  
+**Impact**: Unicode normalization broken
+
+**Description**:
+No Unicode normalization system. Critical issues:
+- Autocorrection fails: "café" vs "café" treated as different words
+- Dictionary lookup broken for accented characters
+- Search doesn't find equivalent forms
+- Data stored inconsistently (NFC vs NFD)
+- Combining diacriticals not handled
+
+**User Impact**:
+- ❌ Autocorrect fails on French: "café" not recognized
+- ❌ Search broken: searching "naive" won't find "naïve"
+- ❌ German ß vs ss mismatch
+- ❌ Vietnamese tone marks broken
+- ❌ Greek polytonic accents not handled
+
+**Fix Required**:
+Create UnicodeNormalizer.kt using java.text.Normalizer.
+
+**Estimated Effort**: 1 week
+
+---
+

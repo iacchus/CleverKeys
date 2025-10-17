@@ -21827,3 +21827,436 @@ Create SettingsSyncManager.kt with cloud storage integration and versioned migra
 
 ---
 
+
+## **File 182: ShareExtensionManager.java** (150-250 lines estimated)
+
+**Category**: Category E - Integration & Sync Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Implements Android share sheet integration for sharing keyboard data (themes, layouts, dictionaries, clipboard history) to other apps or contacts.
+
+**Missing Functionality**:
+
+1. **Share Provider**:
+```java
+public class ShareExtensionManager {
+    
+    public void shareTheme(CustomTheme theme, Context context) {
+        // Export theme to temporary file
+        File themeFile = exportThemeToFile(theme);
+        
+        // Create share intent
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("application/cleverkeys-theme");
+        shareIntent.putExtra(Intent.EXTRA_STREAM, 
+                           FileProvider.getUriForFile(context, themeFile));
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, 
+                           "CleverKeys Theme: " + theme.getName());
+        
+        // Launch share sheet
+        context.startActivity(Intent.createChooser(shareIntent, "Share Theme"));
+    }
+    
+    public void shareLayout(KeyboardLayout layout, Context context) {
+        File layoutFile = exportLayoutToXML(layout);
+        // Similar share intent
+    }
+    
+    public void shareClipboardHistory(List<String> items, Context context) {
+        String combined = items.stream()
+                               .collect(Collectors.joining("\n---\n"));
+        
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, combined);
+        
+        context.startActivity(Intent.createChooser(shareIntent, "Share Clipboard"));
+    }
+}
+```
+
+2. **Shareable Items**:
+   - Themes (.cktheme files)
+   - Layouts (.cklayout files)
+   - User dictionaries (.txt)
+   - Clipboard history (plain text)
+   - Settings backup (.ckbackup)
+   - Typing statistics (CSV export)
+
+3. **Share Targets**:
+   - Email (as attachment)
+   - Messaging apps (Telegram, WhatsApp)
+   - Cloud storage (Drive, Dropbox)
+   - Nearby Share (Android)
+   - QR code generation (for small data)
+
+4. **Import via Share**:
+   - Receive shared themes from others
+   - Receive layouts
+   - Import dictionaries
+   - Handle .cktheme/.cklayout file types
+   - Validate and preview before import
+
+5. **Privacy Controls**:
+   - Warn before sharing dictionaries (may contain sensitive words)
+   - Strip device-specific data
+   - Anonymous sharing option
+   - Encryption option for sensitive data
+
+**User Impact**: Users cannot easily share their custom themes/layouts with friends or online communities. Must use manual file export and third-party apps. Reduces community engagement and theme sharing.
+
+**Bug ID**: #384
+
+**Severity**: **LOW** (Missing feature - reduces sharing convenience)
+
+**Fix Required**:
+Create ShareExtensionManager.kt with FileProvider integration.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## **File 183: URLSchemeHandler.java** (200-300 lines estimated)
+
+**Category**: Category E - Integration & Sync Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Implements deep linking via custom URL schemes (cleverkeys://) for direct navigation to specific keyboard features, settings, or actions from external apps/websites.
+
+**Missing Functionality**:
+
+1. **URL Scheme Parser**:
+```java
+public class URLSchemeHandler {
+    // Supported URL schemes:
+    // cleverkeys://settings/theme
+    // cleverkeys://settings/layout
+    // cleverkeys://settings/neural
+    // cleverkeys://action/paste?text=hello
+    // cleverkeys://import/theme?url=https://...
+    // cleverkeys://calibrate
+    
+    public void handleURL(Uri uri) {
+        String host = uri.getHost();  // settings, action, import, etc.
+        String path = uri.getPath();  // /theme, /layout, etc.
+        
+        switch (host) {
+            case "settings":
+                openSettings(path);
+                break;
+            case "action":
+                performAction(path, uri.getQueryParameters());
+                break;
+            case "import":
+                importResource(path, uri.getQueryParameter("url"));
+                break;
+            case "calibrate":
+                openCalibration();
+                break;
+        }
+    }
+    
+    private void openSettings(String section) {
+        Intent intent = new Intent(context, SettingsActivity.class);
+        intent.putExtra("section", section);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+}
+```
+
+2. **Supported URL Actions**:
+   - `cleverkeys://settings/theme` - Open theme settings
+   - `cleverkeys://settings/layout` - Open layout settings
+   - `cleverkeys://settings/neural` - Open neural prediction settings
+   - `cleverkeys://settings/accessibility` - Open accessibility settings
+   - `cleverkeys://action/paste?text=...` - Paste specific text
+   - `cleverkeys://action/type?text=...` - Type specific text
+   - `cleverkeys://import/theme?url=...` - Import theme from URL
+   - `cleverkeys://import/layout?url=...` - Import layout from URL
+   - `cleverkeys://calibrate` - Open calibration screen
+   - `cleverkeys://test` - Open test activity
+
+3. **Web Integration**:
+   - Clickable links on websites
+   - Email campaign links
+   - Social media post links
+   - QR codes for quick actions
+   - Tutorial deeplinks
+
+4. **Intent Filter Registration**:
+```xml
+<activity android:name=".URLSchemeActivity">
+    <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="cleverkeys" />
+    </intent-filter>
+</activity>
+```
+
+5. **Security & Validation**:
+   - Whitelist allowed domains for imports
+   - User confirmation for sensitive actions
+   - Rate limiting to prevent abuse
+   - HTTPS-only for external URLs
+
+6. **Analytics Integration**:
+   - Track deeplink usage
+   - Measure campaign effectiveness
+   - A/B testing different links
+
+**User Impact**: No way to create direct links to specific features. Tutorial links must provide manual navigation steps. Marketing campaigns cannot deeplink to features. Reduces user onboarding efficiency.
+
+**Bug ID**: #385
+
+**Severity**: **LOW** (Missing feature - reduces integration capabilities)
+
+**Fix Required**:
+Create URLSchemeHandler.kt with intent filter registration.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## **File 184: IntentFilterManager.java** (150-250 lines estimated)
+
+**Category**: Category E - Integration & Sync Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Handles external Android intents for system-wide integration. Allows other apps to trigger keyboard actions, import data, or query keyboard state.
+
+**Missing Functionality**:
+
+1. **Intent Handlers**:
+```java
+public class IntentFilterManager extends BroadcastReceiver {
+    
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        String action = intent.getAction();
+        
+        switch (action) {
+            case "com.cleverkeys.ACTION_PASTE":
+                String text = intent.getStringExtra("text");
+                pasteText(text);
+                break;
+                
+            case "com.cleverkeys.ACTION_SWITCH_LAYOUT":
+                String layoutName = intent.getStringExtra("layout");
+                switchLayout(layoutName);
+                break;
+                
+            case "com.cleverkeys.ACTION_ENABLE_SWIPE":
+                boolean enable = intent.getBooleanExtra("enable", true);
+                setSwipeEnabled(enable);
+                break;
+                
+            case "com.cleverkeys.ACTION_IMPORT_THEME":
+                Uri themeUri = intent.getData();
+                importTheme(themeUri);
+                break;
+        }
+    }
+}
+```
+
+2. **Supported Actions**:
+   - `ACTION_PASTE` - Paste text to current input
+   - `ACTION_TYPE` - Type text with delays
+   - `ACTION_SWITCH_LAYOUT` - Switch keyboard layout
+   - `ACTION_ENABLE_SWIPE` - Toggle swipe typing
+   - `ACTION_SET_THEME` - Apply theme by name
+   - `ACTION_IMPORT_THEME` - Import theme from URI
+   - `ACTION_IMPORT_LAYOUT` - Import layout from URI
+   - `ACTION_CLEAR_CLIPBOARD` - Clear clipboard history
+   - `ACTION_GET_STATE` - Query keyboard state (layout, theme)
+
+3. **Automation Integration**:
+   - Tasker plugin support
+   - MacroDroid integration
+   - Automate app support
+   - IFTTT webhooks
+   - Home Assistant integration
+
+4. **Permission Model**:
+   - Request permissions for sensitive actions
+   - Whitelist trusted apps (Tasker, automation apps)
+   - User confirmation for first-time callers
+   - Audit log of external actions
+
+5. **Query API**:
+```java
+// Other apps can query keyboard state
+ContentProvider provider = new CleverKeysContentProvider();
+
+Cursor cursor = context.getContentResolver().query(
+    Uri.parse("content://com.cleverkeys.provider/state"),
+    null, null, null, null
+);
+
+// Returns: current_layout, current_theme, swipe_enabled, etc.
+```
+
+6. **Event Broadcasting**:
+   - Broadcast when layout changes
+   - Broadcast when theme changes
+   - Broadcast when swipe prediction completes
+   - Broadcast when clipboard updated
+
+**User Impact**: No way for automation apps (Tasker) to control keyboard. Cannot integrate with smart home routines. Power users cannot script keyboard behavior. Limits advanced use cases.
+
+**Bug ID**: #386
+
+**Severity**: **LOW** (Missing feature - blocks power user automation)
+
+**Fix Required**:
+Create IntentFilterManager.kt with broadcast receiver and content provider.
+
+**Estimated Effort**: 3-4 weeks
+
+---
+
+## **File 185: DeveloperAPILibrary.java** (400-500 lines estimated)
+
+**Category**: Category E - Integration & Sync Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Provides comprehensive developer API for third-party apps to integrate with CleverKeys. Enables custom input methods, prediction plugins, theme generators, and automation tools.
+
+**Missing Functionality**:
+
+1. **Public API Interface**:
+```java
+public class CleverKeysAPI {
+    
+    // Prediction API
+    public interface PredictionProvider {
+        List<String> getPredictions(String input, int maxResults);
+        void trainOnCorrection(String typed, String corrected);
+    }
+    
+    // Theme API
+    public interface ThemeProvider {
+        ThemeData getTheme(String themeId);
+        void applyTheme(ThemeData theme);
+        List<ThemeData> getAllThemes();
+    }
+    
+    // Layout API
+    public interface LayoutProvider {
+        KeyboardLayout getLayout(String layoutId);
+        void switchLayout(String layoutId);
+        List<KeyboardLayout> getAllLayouts();
+    }
+    
+    // Input API
+    public interface InputHandler {
+        void typeText(String text);
+        void pasteText(String text);
+        void sendKeyEvent(KeyEvent event);
+        void clearInput();
+    }
+    
+    // Listener API
+    public interface KeyboardListener {
+        void onLayoutChanged(String newLayout);
+        void onThemeChanged(String newTheme);
+        void onSwipePrediction(List<String> predictions);
+        void onKeyPressed(KeyValue key);
+    }
+}
+```
+
+2. **Plugin System**:
+```java
+public abstract class CleverKeysPlugin {
+    public abstract String getPluginId();
+    public abstract String getPluginName();
+    public abstract int getPluginVersion();
+    
+    public void onEnable() {}
+    public void onDisable() {}
+    public void onKeyPress(KeyValue key) {}
+    public void onSwipe(List<PointF> points) {}
+    public List<String> providePredictions(String input) { return null; }
+}
+
+// Example: Emoji Suggestion Plugin
+public class EmojiPlugin extends CleverKeysPlugin {
+    @Override
+    public List<String> providePredictions(String input) {
+        if (input.endsWith("happy")) {
+            return Arrays.asList("😊", "😃", "😄");
+        }
+        return null;
+    }
+}
+```
+
+3. **AIDL Service Interface**:
+```aidl
+// ICleverKeysService.aidl
+interface ICleverKeysService {
+    String getCurrentLayout();
+    void setLayout(String layoutId);
+    String getCurrentTheme();
+    void setTheme(String themeId);
+    List<String> getPredictions(String input, int maxResults);
+    void typeText(String text);
+    boolean isSwipeEnabled();
+    void setSwipeEnabled(boolean enabled);
+    void registerListener(IKeyboardListener listener);
+    void unregisterListener(IKeyboardListener listener);
+}
+```
+
+4. **SDK Library**:
+   - Gradle dependency: `implementation 'com.cleverkeys:api:1.0.0'`
+   - Maven artifact for Java apps
+   - AAR file for Android libraries
+   - Documentation and Javadocs
+   - Sample code and tutorials
+
+5. **OAuth/API Key Authentication**:
+   - Register developer account
+   - Generate API keys
+   - Rate limiting per app
+   - Usage analytics
+
+6. **Webhooks**:
+   - HTTP callbacks for events
+   - Custom endpoint registration
+   - JSON payload format
+   - Retry logic for failed webhooks
+
+7. **Testing Tools**:
+   - API playground web app
+   - Mock keyboard service
+   - Integration test suite
+   - Performance benchmarks
+
+**User Impact**: Developers cannot extend CleverKeys with custom functionality. No ecosystem of third-party plugins/themes. Cannot integrate with other productivity apps. Limits keyboard's potential.
+
+**Bug ID**: #387
+
+**Severity**: **LOW** (Missing feature - no developer ecosystem)
+
+**Fix Required**:
+Create developer API with AIDL service, plugin system, and SDK library.
+
+**Estimated Effort**: 8-10 weeks
+
+---
+
+**Category E (Integration & Sync Features) - COMPLETE: 8 files documented**
+
+Continuing with next category...
+
+---
+

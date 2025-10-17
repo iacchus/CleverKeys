@@ -11705,3 +11705,235 @@ class SpellChecker {
 
 **Architectural Note**: Spell checking is independent of neural prediction. ONNX handles swipe gestures, but tap-typing needs traditional spell checking.
 
+
+---
+
+## File 113: FrequencyModel.java - COMPLETELY MISSING
+
+**Original Java**: FrequencyModel.java (estimated 200-300 lines)
+**Kotlin Implementation**: ❌ DOES NOT EXIST
+**Purpose**: Word frequency tracking and ranking for predictions
+**Classification**: 💀 CATASTROPHIC - Essential prediction ranking missing
+
+### **🐛 BUG #312: FREQUENCY MODEL COMPLETELY MISSING (CATASTROPHIC)**
+
+**Expected Java Implementation** (200-300 lines):
+```java
+class FrequencyModel {
+    private Map<String, Integer> wordFrequencies;
+    private Map<String, Long> lastUsedTimestamps;
+    private static final int DECAY_DAYS = 30;
+    
+    // Get frequency score for word
+    int getFrequency(String word) {
+        Integer baseFreq = wordFrequencies.getOrDefault(word, 0);
+        Long lastUsed = lastUsedTimestamps.get(word);
+        
+        // Apply time decay
+        if (lastUsed != null) {
+            long daysSince = (System.currentTimeMillis() - lastUsed) / (1000 * 60 * 60 * 24);
+            double decayFactor = Math.exp(-daysSince / (double)DECAY_DAYS);
+            return (int)(baseFreq * decayFactor);
+        }
+        
+        return baseFreq;
+    }
+    
+    // Update frequency when word is used
+    void recordUsage(String word) {
+        wordFrequencies.put(word, wordFrequencies.getOrDefault(word, 0) + 1);
+        lastUsedTimestamps.put(word, System.currentTimeMillis());
+    }
+    
+    // Get top N most frequent words
+    List<String> getTopWords(int n) {
+        return wordFrequencies.entrySet().stream()
+            .sorted((a, b) -> b.getValue() - a.getValue())
+            .limit(n)
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
+    }
+    
+    // Load from pre-trained corpus
+    void loadCorpusFrequencies(InputStream corpus) {
+        // Load word frequencies from statistical corpus
+    }
+}
+```
+
+**Missing Features**:
+1. ❌ **Word frequency tracking** - Count word usage
+2. ❌ **Time decay** - Recent words ranked higher
+3. ❌ **Corpus frequencies** - Pre-trained language statistics
+4. ❌ **Personalized learning** - User-specific frequency adaptation
+5. ❌ **Frequency-based ranking** - Sort predictions by likelihood
+6. ❌ **Persistence** - Save/load frequency data
+7. ❌ **Multi-language** - Per-language frequency models
+8. ❌ **Context sensitivity** - Frequency by context (email, chat, formal)
+
+**Impact**: Prediction ordering is NOT personalized. Neural model has no frequency guidance. Common words not prioritized.
+
+---
+
+## File 114: TextPredictionEngine.java - COMPLETELY MISSING
+
+**Original Java**: TextPredictionEngine.java (estimated 400-500 lines)
+**Kotlin Implementation**: ❌ DOES NOT EXIST
+**Purpose**: Next-word prediction for tap typing
+**Classification**: 💀 CATASTROPHIC - Tap-typing prediction missing
+
+### **🐛 BUG #313: TEXT PREDICTION ENGINE COMPLETELY MISSING (CATASTROPHIC)**
+
+**Expected Java Implementation** (400-500 lines):
+```java
+class TextPredictionEngine {
+    private NgramModel ngramModel;
+    private FrequencyModel frequencyModel;
+    private BigramModel bigramModel;
+    private UserAdaptationManager userModel;
+    
+    // Predict next word based on context
+    List<PredictionCandidate> predictNextWord(List<String> context, String partial) {
+        List<PredictionCandidate> candidates = new ArrayList<>();
+        
+        // Get candidates from different sources
+        List<String> ngramCandidates = ngramModel.predict(context, 20);
+        List<String> bigramCandidates = bigramModel.predict(context.get(context.size() - 1), 20);
+        List<String> frequencyCandidates = frequencyModel.getTopWords(20);
+        List<String> userCandidates = userModel.predictFromHistory(context, 20);
+        
+        // Combine and score candidates
+        Map<String, Double> scores = new HashMap<>();
+        for (String word : mergeCandidates(ngramCandidates, bigramCandidates, frequencyCandidates, userCandidates)) {
+            if (partial.isEmpty() || word.startsWith(partial)) {
+                double score = calculateScore(word, context);
+                scores.put(word, score);
+            }
+        }
+        
+        // Sort by score
+        return scores.entrySet().stream()
+            .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+            .limit(5)
+            .map(e -> new PredictionCandidate(e.getKey(), e.getValue()))
+            .collect(Collectors.toList());
+    }
+    
+    // Calculate composite score
+    private double calculateScore(String word, List<String> context) {
+        double ngramScore = ngramModel.getScore(context, word) * 0.4;
+        double bigramScore = bigramModel.getScore(context.get(context.size() - 1), word) * 0.3;
+        double freqScore = frequencyModel.getFrequency(word) / 10000.0 * 0.2;
+        double userScore = userModel.getUserScore(word, context) * 0.1;
+        
+        return ngramScore + bigramScore + freqScore + userScore;
+    }
+    
+    // Complete partial word
+    List<String> completeWord(String partial) {
+        return dictionary.getWordsWithPrefix(partial).stream()
+            .sorted((a, b) -> Integer.compare(
+                frequencyModel.getFrequency(b),
+                frequencyModel.getFrequency(a)
+            ))
+            .limit(5)
+            .collect(Collectors.toList());
+    }
+}
+```
+
+**Missing Features**:
+1. ❌ **Next-word prediction** - Suggest words before typing
+2. ❌ **Word completion** - Auto-complete partial words
+3. ❌ **Multi-model fusion** - Combine ngram, bigram, frequency, user data
+4. ❌ **Context awareness** - Use previous words
+5. ❌ **Scoring algorithm** - Weighted combination
+6. ❌ **Personalization** - Learn user patterns
+7. ❌ **Multi-language** - Language-specific prediction
+8. ❌ **Dynamic updating** - Real-time learning
+
+**Impact**: NO next-word prediction for tap typing. Users must type every character. No auto-complete suggestions.
+
+**Architectural Note**: ONNX provides swipe prediction only. Tap-typing prediction is a separate traditional NLP feature.
+
+---
+
+## File 115: CompletionEngine.java - COMPLETELY MISSING
+
+**Original Java**: CompletionEngine.java (estimated 250-350 lines)
+**Kotlin Implementation**: ❌ DOES NOT EXIST
+**Purpose**: Word and phrase auto-completion
+**Classification**: 💀 CATASTROPHIC - Auto-completion missing
+
+### **🐛 BUG #314: COMPLETION ENGINE COMPLETELY MISSING (CATASTROPHIC)**
+
+**Expected Java Implementation** (250-350 lines):
+```java
+class CompletionEngine {
+    private TrieDataStructure prefixTrie;
+    private FrequencyModel frequencies;
+    private Map<String, List<String>> phraseCompletions;
+    
+    // Complete word from prefix
+    List<Completion> completeWord(String prefix, int maxResults) {
+        List<String> candidates = prefixTrie.getWordsWithPrefix(prefix);
+        
+        return candidates.stream()
+            .map(word -> new Completion(
+                word,
+                frequencies.getFrequency(word),
+                prefix.length(),
+                CompletionType.WORD
+            ))
+            .sorted((a, b) -> Integer.compare(b.frequency, a.frequency))
+            .limit(maxResults)
+            .collect(Collectors.toList());
+    }
+    
+    // Complete phrase
+    List<Completion> completePhrase(String text) {
+        List<String> words = Arrays.asList(text.split("\\s+"));
+        String lastWord = words.get(words.size() - 1);
+        
+        // Check for common phrase completions
+        String phrasePrefix = String.join(" ", words.subList(Math.max(0, words.size() - 3), words.size()));
+        
+        if (phraseCompletions.containsKey(phrasePrefix)) {
+            return phraseCompletions.get(phrasePrefix).stream()
+                .map(completion -> new Completion(
+                    completion,
+                    0,
+                    lastWord.length(),
+                    CompletionType.PHRASE
+                ))
+                .collect(Collectors.toList());
+        }
+        
+        return Collections.emptyList();
+    }
+    
+    // Add custom phrase completion
+    void addPhraseCompletion(String trigger, List<String> completions) {
+        phraseCompletions.put(trigger, completions);
+    }
+    
+    // Learn from user input
+    void learnCompletion(String prefix, String completion) {
+        prefixTrie.insert(completion);
+        frequencies.recordUsage(completion);
+    }
+}
+```
+
+**Missing Features**:
+1. ❌ **Word completion** - Complete partial words
+2. ❌ **Phrase completion** - Multi-word completions
+3. ❌ **Prefix matching** - Trie-based fast lookup
+4. ❌ **Frequency ranking** - Sort by usage
+5. ❌ **Custom completions** - User-defined expansions
+6. ❌ **Learning** - Adapt to user vocabulary
+7. ❌ **Smart suggestions** - Context-aware completions
+8. ❌ **Emoji completions** - :smile: → 😊
+
+**Impact**: NO word/phrase auto-completion. Users cannot get completion suggestions while typing. No smart shortcuts.
+

@@ -22690,3 +22690,705 @@ Create NetworkTrafficMonitor.kt with request tracking and diagnostics.
 
 ---
 
+
+## **File 190: CrashReporter.java** (300-400 lines estimated)
+
+**Category**: Category F - Developer Tools & Debugging
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Automated crash reporting system that captures exceptions, stack traces, device info, and app state. Sends reports to developers for fixing bugs.
+
+**Missing Functionality**:
+
+1. **Exception Handler**:
+```java
+public class CrashReporter implements Thread.UncaughtExceptionHandler {
+    private Thread.UncaughtExceptionHandler defaultHandler;
+    
+    @Override
+    public void uncaughtException(Thread thread, Throwable throwable) {
+        try {
+            // Capture crash report
+            CrashReport report = new CrashReport(
+                timestamp = System.currentTimeMillis(),
+                appVersion = BuildConfig.VERSION_NAME,
+                androidVersion = Build.VERSION.RELEASE,
+                deviceModel = Build.MODEL,
+                manufacturer = Build.MANUFACTURER,
+                
+                // Exception details
+                exceptionClass = throwable.getClass().getName(),
+                exceptionMessage = throwable.getMessage(),
+                stackTrace = Log.getStackTraceString(throwable),
+                threadName = thread.getName(),
+                
+                // App state
+                activeActivity = getActiveActivity(),
+                memoryUsage = getMemoryUsage(),
+                neuralEngineState = getNeuralEngineState(),
+                lastUserAction = getLastUserAction(),
+                
+                // Logs
+                recentLogs = LogcatExporter.getRecentLogs()
+            );
+            
+            // Save to file
+            saveCrashReport(report);
+            
+            // Upload to backend (if user opted in)
+            if (isAnalyticsEnabled()) {
+                uploadCrashReport(report);
+            }
+            
+        } finally {
+            // Call default handler to show system crash dialog
+            defaultHandler.uncaughtException(thread, throwable);
+        }
+    }
+}
+```
+
+2. **Crash Report Contents**:
+   - Exception class and message
+   - Full stack trace
+   - Thread name and state
+   - App version and build number
+   - Android version and API level
+   - Device model and manufacturer
+   - RAM: total, available, used
+   - Storage: total, available
+   - Battery level and charging state
+   - Network connectivity state
+   - Last 100 log lines
+   - Last 5 user actions
+   - Neural engine state (loaded models, active predictions)
+   - Current keyboard layout and theme
+   - Active settings
+
+3. **Automatic Upload**:
+   - Upload on next app launch
+   - WiFi-only option
+   - User consent required (opt-in)
+   - Privacy: redact user-typed text
+   - Retry failed uploads
+
+4. **Crash Dialog**:
+   - Show user-friendly crash message
+   - Option to send crash report
+   - Option to restart keyboard
+   - Option to view crash details
+   - "Contact support" button
+
+5. **Backend Integration**:
+   - Firebase Crashlytics
+   - Sentry.io
+   - Bugsnag
+   - Custom crash reporting server
+   - Email to developer option
+
+6. **Crash Analytics**:
+   - Group similar crashes
+   - Frequency and affected users
+   - Crash-free user percentage
+   - Crash trends over time
+   - Most common crashes
+
+**User Impact**: Crashes go unreported, developers unaware of issues. Users experience bugs repeatedly without fixes. No systematic crash tracking.
+
+**Bug ID**: #392
+
+**Severity**: **MEDIUM** (Important for quality - helps fix bugs)
+
+**Fix Required**:
+Create CrashReporter.kt with exception handling and privacy-safe reporting.
+
+**Estimated Effort**: 3-4 weeks
+
+---
+
+## **File 191: AnalyticsCollector.java** (250-350 lines estimated)
+
+**Category**: Category F - Developer Tools & Debugging
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Privacy-respecting analytics system for tracking feature usage, user behavior, and app performance. Helps developers understand how users interact with keyboard.
+
+**Missing Functionality**:
+
+1. **Event Tracking**:
+```java
+public class AnalyticsCollector {
+    
+    public void trackEvent(String category, String action, String label, long value) {
+        AnalyticsEvent event = new AnalyticsEvent(
+            timestamp = System.currentTimeMillis(),
+            category = category,
+            action = action,
+            label = label,
+            value = value,
+            sessionId = getCurrentSessionId(),
+            userId = getAnonymousUserId()  // NO personal data
+        );
+        
+        eventQueue.add(event);
+        
+        // Batch upload every 50 events or 5 minutes
+        if (eventQueue.size() >= 50) {
+            uploadEvents();
+        }
+    }
+    
+    // Example usage:
+    // trackEvent("swipe", "prediction", "success", 1);
+    // trackEvent("layout", "switch", "qwerty_to_numeric", 1);
+    // trackEvent("theme", "apply", "dark_mode", 1);
+}
+```
+
+2. **Tracked Events**:
+   - **Swipe typing**: attempts, successes, failures
+   - **Predictions**: accepted, rejected, manually corrected
+   - **Layout switches**: which layouts used most
+   - **Theme changes**: theme popularity
+   - **Settings changes**: which features enabled/disabled
+   - **Feature usage**: emoji, clipboard, voice typing
+   - **Performance**: latencies, crashes, ANRs
+   - **User retention**: daily active users, session length
+
+3. **Privacy Controls**:
+   - Opt-in only (default: disabled)
+   - NO personally identifiable information
+   - NO typed text or clipboard content
+   - Anonymous user IDs only
+   - Local aggregation before upload
+   - Clear privacy policy
+
+4. **Backend Options**:
+   - Google Analytics
+   - Mixpanel
+   - Amplitude
+   - Self-hosted Matomo
+   - Local storage only (no upload)
+
+5. **Dashboard Integration**:
+   - Real-time active users
+   - Feature adoption rates
+   - Error rates and trends
+   - Performance metrics
+   - User engagement scores
+
+6. **A/B Testing Support**:
+   - Feature flag system
+   - Variant assignment
+   - Metric comparison
+   - Statistical significance
+
+**User Impact**: Developers lack data on feature usage. Cannot prioritize improvements. Don't know which features are popular or broken. Makes development decisions blind.
+
+**Bug ID**: #393
+
+**Severity**: **LOW** (Developer insight - not user-facing)
+
+**Fix Required**:
+Create AnalyticsCollector.kt with privacy-first event tracking.
+
+**Estimated Effort**: 4-5 weeks
+
+---
+
+## **File 192: FeatureFlagManager.java** (150-250 lines estimated)
+
+**Category**: Category F - Developer Tools & Debugging
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Feature flag system for enabling/disabling features remotely, A/B testing, gradual rollouts, and emergency kill switches.
+
+**Missing Functionality**:
+
+1. **Feature Flag Definition**:
+```java
+public class FeatureFlagManager {
+    private Map<String, FeatureFlag> flags = new HashMap<>();
+    
+    public static class FeatureFlag {
+        String key;
+        boolean enabled;
+        String description;
+        int rolloutPercentage;  // 0-100
+        List<String> enabledForUsers;  // Specific user IDs
+        long expirationTimestamp;
+    }
+    
+    public boolean isFeatureEnabled(String featureKey) {
+        FeatureFlag flag = flags.get(featureKey);
+        if (flag == null) return false;  // Default: disabled
+        
+        // Check expiration
+        if (flag.expirationTimestamp > 0 && 
+            System.currentTimeMillis() > flag.expirationTimestamp) {
+            return false;
+        }
+        
+        // Check if user is in enabled list
+        String userId = getAnonymousUserId();
+        if (flag.enabledForUsers.contains(userId)) {
+            return true;
+        }
+        
+        // Check rollout percentage
+        int userBucket = Math.abs(userId.hashCode() % 100);
+        return userBucket < flag.rolloutPercentage;
+    }
+}
+```
+
+2. **Remote Configuration**:
+   - Firebase Remote Config
+   - Custom configuration backend
+   - JSON configuration file
+   - Local overrides for development
+
+3. **Common Feature Flags**:
+   - `neural_prediction_v2`: New prediction algorithm
+   - `advanced_gestures`: Advanced swipe gestures
+   - `cloud_sync`: Cloud synchronization
+   - `accessibility_v2`: New accessibility features
+   - `experimental_layouts`: Beta keyboard layouts
+   - `performance_mode`: Performance optimizations
+
+4. **Gradual Rollouts**:
+   - 0%: Disabled for everyone
+   - 5%: Canary (early testers)
+   - 25%: Beta (enthusiasts)
+   - 50%: Half of users
+   - 100%: General availability
+
+5. **Emergency Kill Switch**:
+   - Instantly disable broken features
+   - No app update required
+   - Rollback to safe state
+   - Notify users of issue
+
+6. **Developer Overrides**:
+   - Force enable any feature
+   - Debug menu for toggling flags
+   - Export current flag state
+   - Reset to defaults
+
+**User Impact**: Cannot test new features safely. No way to roll back broken features. Must release new app version for every change. Risky deployments.
+
+**Bug ID**: #394
+
+**Severity**: **MEDIUM** (Important for safe feature rollouts)
+
+**Fix Required**:
+Create FeatureFlagManager.kt with remote configuration support.
+
+**Estimated Effort**: 3-4 weeks
+
+---
+
+## **File 193: BetaTesterTools.java** (200-300 lines estimated)
+
+**Category**: Category F - Developer Tools & Debugging
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Special tools and UI for beta testers to provide feedback, report bugs, and test experimental features.
+
+**Missing Functionality**:
+
+1. **Beta Tester Menu**:
+```java
+public class BetaTesterTools extends Activity {
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        // Only show if beta build or tester opted in
+        if (!isBetaBuild() && !isOptedIntoTesting()) {
+            finish();
+            return;
+        }
+        
+        // Show beta tools UI
+        setContentView(R.layout.beta_tools);
+        
+        setupFeatureToggles();
+        setupFeedbackButton();
+        setupBugReportButton();
+        setupDebugOverlay();
+        setupExperimentalFeatures();
+    }
+    
+    private void setupFeatureToggles() {
+        // Toggle any feature flag
+        // Override remote config locally
+        // Reset to defaults
+    }
+}
+```
+
+2. **Quick Feedback**:
+   - Thumbs up/down for predictions
+   - Rate feature experience (1-5 stars)
+   - Quick comment field
+   - Screenshot with annotations
+   - Send feedback in-app
+
+3. **Bug Report Builder**:
+   - Auto-include logs
+   - Auto-include device info
+   - Attach screenshot
+   - Record reproduction steps
+   - Describe expected vs actual behavior
+   - One-tap submit to GitHub Issues
+
+4. **Experimental Features**:
+   - List of beta features
+   - Toggle individual features
+   - Description and status
+   - Known issues list
+   - Feedback count for each feature
+
+5. **Performance Testing**:
+   - Run benchmark suite
+   - Compare with previous versions
+   - Share results with developers
+   - Identify regressions
+
+6. **Beta Channel Options**:
+   - Stable: Tested features only
+   - Beta: Public testing
+   - Alpha: Internal testing
+   - Nightly: Latest development builds
+   - Switch channels easily
+
+**User Impact**: Beta testers lack tools to provide effective feedback. Bug reports incomplete. Difficult to test experimental features. Slow feedback loop.
+
+**Bug ID**: #395
+
+**Severity**: **LOW** (Beta program enhancement)
+
+**Fix Required**:
+Create BetaTesterTools.kt with feedback UI and feature toggles.
+
+**Estimated Effort**: 3-4 weeks
+
+---
+
+**Category F (Developer Tools & Debugging) - 8 files documented**
+
+Continuing with remaining utilities and miscellaneous files...
+
+---
+
+## **CATEGORY G: REMAINING UTILITIES & MISCELLANEOUS**
+
+---
+
+## **File 194: StringUtils.java** (100-150 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: ⚠️ **PARTIAL IMPLEMENTATION**
+
+**Purpose**: String manipulation utilities for text processing, validation, and formatting.
+
+**Missing Functionality**:
+
+1. **Text Normalization**:
+```java
+public class StringUtils {
+    // MISSING: Trim to maximum length with ellipsis
+    public static String truncate(String str, int maxLength) {
+        if (str == null || str.length() <= maxLength) return str;
+        return str.substring(0, maxLength - 3) + "...";
+    }
+    
+    // MISSING: Capitalize first letter of each word
+    public static String toTitleCase(String str) {
+        if (str == null || str.isEmpty()) return str;
+        
+        String[] words = str.split("\\s+");
+        StringBuilder result = new StringBuilder();
+        
+        for (String word : words) {
+            if (word.length() > 0) {
+                result.append(Character.toUpperCase(word.charAt(0)))
+                      .append(word.substring(1).toLowerCase())
+                      .append(" ");
+            }
+        }
+        
+        return result.toString().trim();
+    }
+    
+    // MISSING: Remove diacritics/accents
+    public static String removeDiacritics(String str) {
+        String normalized = Normalizer.normalize(str, Normalizer.Form.NFD);
+        return normalized.replaceAll("\\p{M}", "");
+    }
+}
+```
+
+2. **Validation**:
+   - Email validation
+   - URL validation
+   - Phone number validation
+   - Credit card number validation (Luhn algorithm)
+
+3. **Formatting**:
+   - Phone number formatting
+   - Currency formatting
+   - Date/time formatting
+   - Byte size formatting (1024 → "1 KB")
+
+4. **Text Manipulation**:
+   - Reverse string
+   - Count words
+   - Count characters (with/without spaces)
+   - Find and replace with regex
+
+**User Impact**: Limited text processing capabilities in Kotlin version. Missing utility functions used in Java version.
+
+**Bug ID**: #396
+
+**Severity**: **LOW** (Utility enhancement)
+
+**Fix Required**:
+Enhance Utils.kt with missing string utilities from Java StringUtils.java.
+
+**Estimated Effort**: 1-2 weeks
+
+---
+
+## **File 195: DateTimeUtils.java** (80-120 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Date and time utilities for formatting, parsing, and calculations.
+
+**Missing Functionality**:
+
+1. **Formatting**:
+```java
+public class DateTimeUtils {
+    // Format timestamp as "2 minutes ago", "1 hour ago", "Yesterday", etc.
+    public static String getRelativeTimeString(long timestamp) {
+        long now = System.currentTimeMillis();
+        long diff = now - timestamp;
+        
+        if (diff < 60000) return "Just now";
+        if (diff < 3600000) return (diff / 60000) + " minutes ago";
+        if (diff < 86400000) return (diff / 3600000) + " hours ago";
+        if (diff < 172800000) return "Yesterday";
+        
+        return new SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(timestamp);
+    }
+    
+    // Format duration in ms as "1h 23m 45s"
+    public static String formatDuration(long durationMs) {
+        long hours = durationMs / 3600000;
+        long minutes = (durationMs % 3600000) / 60000;
+        long seconds = (durationMs % 60000) / 1000;
+        
+        if (hours > 0) return String.format("%dh %dm %ds", hours, minutes, seconds);
+        if (minutes > 0) return String.format("%dm %ds", minutes, seconds);
+        return String.format("%ds", seconds);
+    }
+}
+```
+
+2. **Parsing**:
+   - Parse ISO 8601 dates
+   - Parse relative dates ("tomorrow", "next week")
+   - Parse time durations ("2h30m")
+
+3. **Calculations**:
+   - Add/subtract days/hours/minutes
+   - Get start/end of day/week/month
+   - Calculate age from birthdate
+   - Calculate duration between dates
+
+**User Impact**: Missing date/time utilities. Inconsistent date formatting. No relative time display.
+
+**Bug ID**: #397
+
+**Severity**: **LOW** (Utility enhancement)
+
+**Fix Required**:
+Create DateTimeUtils.kt with formatting and parsing utilities.
+
+**Estimated Effort**: 1-2 weeks
+
+---
+
+## **File 196: FileUtils.java** (150-200 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: File I/O utilities for reading, writing, copying, and managing files.
+
+**Missing Functionality**:
+
+1. **File Operations**:
+```java
+public class FileUtils {
+    // Read entire file as string
+    public static String readFileToString(File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        
+        String line;
+        while ((line = reader.readLine()) != null) {
+            content.append(line).append("\n");
+        }
+        
+        reader.close();
+        return content.toString();
+    }
+    
+    // Write string to file
+    public static void writeStringToFile(File file, String content) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+        writer.write(content);
+        writer.close();
+    }
+    
+    // Copy file
+    public static void copyFile(File source, File dest) throws IOException {
+        Files.copy(source.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    }
+    
+    // Delete directory recursively
+    public static void deleteRecursive(File file) {
+        if (file.isDirectory()) {
+            for (File child : file.listFiles()) {
+                deleteRecursive(child);
+            }
+        }
+        file.delete();
+    }
+}
+```
+
+2. **File Information**:
+   - Get file size (formatted: "1.5 MB")
+   - Get file extension
+   - Get MIME type
+   - Check if file exists and is readable/writable
+
+3. **Path Utilities**:
+   - Join paths
+   - Get parent directory
+   - Get filename without extension
+   - Normalize path (remove "..", ".")
+
+4. **ZIP Utilities**:
+   - Create ZIP archive
+   - Extract ZIP archive
+   - List ZIP contents
+
+**User Impact**: Missing file I/O utilities. Inconsistent file handling. No ZIP support for backups/imports.
+
+**Bug ID**: #398
+
+**Severity**: **LOW** (Utility enhancement)
+
+**Fix Required**:
+Create FileUtils.kt with file I/O and ZIP utilities.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## **File 197: NetworkUtils.java** (100-150 lines estimated)
+
+**Category**: Category G - Utilities & Miscellaneous
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Network connectivity utilities for checking internet access, network type, and connection quality.
+
+**Missing Functionality**:
+
+1. **Connectivity Checks**:
+```java
+public class NetworkUtils {
+    // Check if internet is available
+    public static boolean isInternetAvailable(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) 
+            context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        
+        Network activeNetwork = cm.getActiveNetwork();
+        if (activeNetwork == null) return false;
+        
+        NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+        return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+    }
+    
+    // Check if connected to WiFi
+    public static boolean isWiFiConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) 
+            context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        
+        Network activeNetwork = cm.getActiveNetwork();
+        if (activeNetwork == null) return false;
+        
+        NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+        return caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+    }
+    
+    // Check if connected to cellular
+    public static boolean isCellularConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) 
+            context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        
+        Network activeNetwork = cm.getActiveNetwork();
+        if (activeNetwork == null) return false;
+        
+        NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+        return caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+    }
+}
+```
+
+2. **Network Type Detection**:
+   - WiFi, Cellular, Ethernet, VPN
+   - Network generation (2G, 3G, 4G, 5G)
+   - Metered vs unmetered
+   - Roaming status
+
+3. **Connection Quality**:
+   - Signal strength
+   - Bandwidth estimation
+   - Latency measurement
+   - Packet loss detection
+
+4. **Network Listeners**:
+   - Register callback for connectivity changes
+   - Notify when WiFi becomes available
+   - Notify when network disconnected
+
+**User Impact**: No network connectivity checks. Sync operations may fail without user feedback. Battery waste on cellular uploads.
+
+**Bug ID**: #399
+
+**Severity**: **LOW** (Utility enhancement)
+
+**Fix Required**:
+Create NetworkUtils.kt with connectivity checks and network type detection.
+
+**Estimated Effort**: 1-2 weeks
+
+---
+

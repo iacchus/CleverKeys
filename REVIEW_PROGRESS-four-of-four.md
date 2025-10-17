@@ -20953,3 +20953,422 @@ Create MouseKeysEmulator.kt with full cursor control and overlay rendering.
 
 ---
 
+
+## **File 174: ToggleKeysSound.java** (100-150 lines estimated)
+
+**Category**: Category D - Accessibility Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Implements "Toggle Keys" audio feedback that plays distinct sounds when modifier keys (Caps Lock, Num Lock, Scroll Lock) are toggled on/off. Critical for blind users and users who cannot see visual indicators.
+
+**Missing Functionality**:
+
+1. **Modifier Toggle Detection**:
+```java
+public class ToggleKeysSound {
+    private AudioManager audioManager;
+    private Map<ModifierKey, Boolean> modifierStates;
+    
+    public void onModifierToggle(ModifierKey key, boolean newState) {
+        modifierStates.put(key, newState);
+        
+        if (newState) {
+            playSound(SOUND_MODIFIER_ON, key);
+        } else {
+            playSound(SOUND_MODIFIER_OFF, key);
+        }
+    }
+    
+    private void playSound(int soundType, ModifierKey key) {
+        // Load appropriate sound file
+        // Caps Lock: High beep (ON), Low beep (OFF)
+        // Num Lock: Medium-high beep (ON), Medium-low (OFF)
+        // Scroll Lock: Low beep (ON), Very low (OFF)
+        // Shift Lock: High beep (ON), Low beep (OFF)
+    }
+}
+```
+
+2. **Sound Differentiation**:
+   - **Caps Lock ON**: 880 Hz beep (A5 note)
+   - **Caps Lock OFF**: 440 Hz beep (A4 note)
+   - **Num Lock ON**: 660 Hz beep (E5 note)
+   - **Num Lock OFF**: 330 Hz beep (E4 note)
+   - **Shift Lock ON**: 1046 Hz beep (C6 note)
+   - **Shift Lock OFF**: 523 Hz beep (C5 note)
+
+3. **Volume Control**:
+   - Respects system volume settings
+   - Separate volume slider for toggle sounds
+   - Mute option while keeping other sounds
+
+4. **Sound Duration**:
+   - Short: 100ms
+   - Medium: 200ms
+   - Long: 300ms
+   - Configurable per modifier
+
+5. **Multiple Simultaneous Modifiers**:
+   - Chord sounds when multiple modifiers toggled
+   - Sequential beeps vs combined tone
+   - Priority handling (Caps > Num > Scroll)
+
+6. **Accessibility Integration**:
+   - Works with TalkBack enabled
+   - Respects "Do Not Disturb" mode
+   - Vibration fallback if sound disabled
+
+**User Impact**: Blind users and low-vision users cannot tell if Caps Lock is on without this feature. Results in TYPING IN ALL CAPS by accident, passwords rejected, frustrating user experience. Essential for screen reader users.
+
+**Bug ID**: #376
+
+**Severity**: **HIGH** (Accessibility - blocks blind users from knowing modifier states)
+
+**Fix Required**:
+Create ToggleKeysSound.kt with frequency-differentiated audio feedback.
+
+**Estimated Effort**: 1-2 weeks
+
+---
+
+## **File 175: ScreenReaderMode.java** (350-450 lines estimated)
+
+**Category**: Category D - Accessibility Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Implements comprehensive TalkBack/screen reader optimization mode that enhances keyboard usability for blind users. Provides detailed key descriptions, navigation hints, and contextual information.
+
+**Missing Functionality**:
+
+1. **Enhanced Key Descriptions**:
+```java
+public class ScreenReaderMode {
+    private AccessibilityManager accessibilityManager;
+    private TextToSpeech tts;
+    
+    public String getKeyDescription(KeyValue keyValue, Pointers.Modifiers modifiers) {
+        StringBuilder description = new StringBuilder();
+        
+        // Modifier prefix
+        if (modifiers.shift) description.append("Shift ");
+        if (modifiers.ctrl) description.append("Control ");
+        if (modifiers.alt) description.append("Alt ");
+        
+        // Key name
+        description.append(getKeyName(keyValue));
+        
+        // Additional context
+        if (keyValue instanceof CharKey) {
+            char c = ((CharKey) keyValue).char;
+            if (Character.isUpperCase(c)) {
+                description.append(" capital");
+            }
+            if (isPunctuation(c)) {
+                description.append(" punctuation");
+            }
+        }
+        
+        return description.toString();
+    }
+    
+    private String getKeyName(KeyValue keyValue) {
+        // Special keys
+        if (keyValue == KeyValue.SPACE) return "Space";
+        if (keyValue == KeyValue.ENTER) return "Enter";
+        if (keyValue == KeyValue.TAB) return "Tab";
+        if (keyValue == KeyValue.BACKSPACE) return "Backspace";
+        
+        // Character keys
+        if (keyValue instanceof CharKey) {
+            char c = ((CharKey) keyValue).char;
+            return getPhoneticName(c);  // "Alpha", "Bravo", "Charlie"
+        }
+        
+        // Function keys
+        if (keyValue instanceof FunctionKey) {
+            return getFunctionName((FunctionKey) keyValue);
+        }
+        
+        return keyValue.toString();
+    }
+}
+```
+
+2. **Phonetic Alphabet**:
+   - NATO phonetic for letters (A="Alpha", B="Bravo")
+   - Detailed punctuation names ("Period", "Question mark")
+   - Symbol descriptions ("Dollar sign", "Percent")
+   - Unicode character names for special characters
+
+3. **Navigation Hints**:
+   - "Key A, row 2, column 1 of 10"
+   - "Suggestion 1 of 3: could"
+   - "Layout QWERTY, 26 keys available"
+   - "Emoji tab, 8 groups available"
+
+4. **Context Awareness**:
+   - Current input field type announced
+   - Text selection state ("5 characters selected")
+   - Autocorrection suggestions ("Did you mean: could?")
+   - Caps lock state ("Caps lock is on")
+
+5. **Gesture Navigation**:
+   - Swipe right: Next key
+   - Swipe left: Previous key
+   - Swipe down: Next row
+   - Swipe up: Previous row
+   - Double tap: Activate key
+   - Two-finger swipe: Jump to section
+
+6. **Explore by Touch**:
+   - Real-time key announcements as finger moves
+   - Lift-off activation (activate on finger lift)
+   - Hover timeout (auto-read after 500ms)
+   - Vibration feedback on key boundaries
+
+7. **TalkBack Integration**:
+   - Custom AccessibilityNodeInfo for each key
+   - Proper content descriptions
+   - Action labels for complex keys
+   - Live region updates for suggestions
+
+8. **Speech Parameters**:
+   - Adjustable speech rate (0.5x to 2.0x)
+   - Pitch adjustment (0.8x to 1.2x)
+   - Earcon/sound effects toggle
+   - Language-specific pronunciation
+
+**User Impact**: Blind users using TalkBack experience: generic key descriptions ("Button", "TextView"), no navigation hints, no context, cannot explore keyboard by touch, must memorize layout. Makes keyboard extremely difficult to use. Violates WCAG 2.1 Level AA guidelines.
+
+**Bug ID**: #377
+
+**Severity**: **CATASTROPHIC** (Accessibility - makes keyboard unusable for blind users with screen readers)
+
+**Fix Required**:
+Create ScreenReaderMode.kt with full TalkBack integration and detailed accessibility node tree.
+
+**Estimated Effort**: 5-6 weeks
+
+---
+
+## **File 176: MotorAccessibilitySettings.java** (200-300 lines estimated)
+
+**Category**: Category D - Accessibility Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Consolidated settings UI for all motor accessibility features (Slow Keys, Sticky Keys, Bounce Keys, Mouse Keys). Provides centralized configuration with preset profiles and testing tools.
+
+**Missing Functionality**:
+
+1. **Preset Profiles**:
+```java
+public class MotorAccessibilitySettings extends PreferenceFragment {
+    
+    public enum AccessibilityProfile {
+        TREMORS("Tremors/Parkinson's", 
+                /* slowKeys */ 500, /* bounceKeys */ 500, /* stickyKeys */ true),
+        SINGLE_HANDED("Single-Handed", 
+                /* slowKeys */ 250, /* bounceKeys */ 300, /* stickyKeys */ true),
+        MOTOR_IMPAIRMENT("Motor Impairment", 
+                /* slowKeys */ 750, /* bounceKeys */ 750, /* stickyKeys */ true),
+        CEREBRAL_PALSY("Cerebral Palsy", 
+                /* slowKeys */ 1000, /* bounceKeys */ 1000, /* stickyKeys */ true),
+        QUADRIPLEGIC("Quadriplegic (Switch Access)", 
+                /* slowKeys */ 250, /* bounceKeys */ 500, /* mouseKeys */ true);
+        
+        // Constructor and methods
+    }
+    
+    public void applyProfile(AccessibilityProfile profile) {
+        // Apply all settings from profile
+        // Show confirmation toast
+        // Offer test mode
+    }
+}
+```
+
+2. **Individual Feature Settings**:
+   - **Slow Keys**:
+     - Enable/disable toggle
+     - Delay slider (0-2000ms)
+     - Visual feedback checkbox
+     - Audio feedback checkbox
+   
+   - **Sticky Keys**:
+     - Enable/disable toggle
+     - Lock on double-press checkbox
+     - Auto-release timeout slider
+     - Beep on state change checkbox
+   
+   - **Bounce Keys**:
+     - Enable/disable toggle
+     - Debounce delay slider (0-2000ms)
+     - Per-key statistics button
+     - Rejection counter display
+   
+   - **Mouse Keys**:
+     - Enable/disable toggle
+     - Cursor speed slider
+     - Acceleration multiplier
+     - Key binding customization
+
+3. **Test Mode**:
+```java
+public class AccessibilityTestActivity extends Activity {
+    public void runInteractiveTest() {
+        showDialog("Please type: The quick brown fox");
+        
+        // Monitor typing
+        // Measure:
+        // - Keys rejected by bounce filter
+        // - Keys requiring slow key hold
+        // - Sticky key usage
+        // - Mouse key effectiveness
+        
+        // Show results and recommendations
+        suggestOptimalSettings(testResults);
+    }
+}
+```
+
+4. **Tuning Wizard**:
+   - Step 1: Identify primary disability
+   - Step 2: Test typing sample text
+   - Step 3: Analyze error patterns
+   - Step 4: Recommend settings
+   - Step 5: Fine-tune and validate
+
+5. **Statistics Dashboard**:
+   - Keys pressed per minute
+   - Rejected keys (bounce filter)
+   - Slow keys successful/failed
+   - Sticky key usage frequency
+   - Mouse key cursor distance traveled
+
+6. **Import/Export**:
+   - Save custom profiles
+   - Share profiles with others
+   - Import from file
+   - QR code sharing
+
+**User Impact**: Users with motor disabilities must manually configure 12+ settings across multiple screens with no guidance. Trial-and-error process takes hours. No way to share optimal settings. Frustrating setup experience discourages use.
+
+**Bug ID**: #378
+
+**Severity**: **HIGH** (Accessibility - makes motor accessibility features difficult to configure)
+
+**Fix Required**:
+Create MotorAccessibilitySettings.kt with profiles, wizard, and testing tools.
+
+**Estimated Effort**: 3-4 weeks
+
+---
+
+## **File 177: AccessibilityTestSuite.java** (400-500 lines estimated)
+
+**Category**: Category D - Accessibility Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Comprehensive automated testing suite for accessibility features. Validates WCAG 2.1 compliance, TalkBack integration, keyboard navigation, and motor accessibility features.
+
+**Missing Functionality**:
+
+1. **WCAG 2.1 Compliance Tests**:
+```java
+public class AccessibilityTestSuite {
+    
+    @Test
+    public void testContrastRatios() {
+        // Test all theme color combinations
+        // Verify AA compliance (4.5:1 for normal text, 3:1 for large)
+        // Verify AAA compliance (7:1 for normal text, 4.5:1 for large)
+        
+        for (Theme theme : Theme.values()) {
+            for (KeyValue key : keyboard.getAllKeys()) {
+                float ratio = calculateContrastRatio(
+                    theme.getKeyBackground(key),
+                    theme.getKeyForeground(key)
+                );
+                
+                assertTrue("Key " + key + " fails AA contrast in " + theme, 
+                          ratio >= 4.5f);
+            }
+        }
+    }
+    
+    @Test
+    public void testTouchTargetSizes() {
+        // WCAG 2.5.5: All targets at least 44x44 dp
+        for (KeyValue key : keyboard.getAllKeys()) {
+            RectF bounds = keyboard.getKeyBounds(key);
+            float widthDp = pxToDp(bounds.width());
+            float heightDp = pxToDp(bounds.height());
+            
+            assertTrue("Key " + key + " too small: " + widthDp + "x" + heightDp,
+                      widthDp >= 44f && heightDp >= 44f);
+        }
+    }
+}
+```
+
+2. **Screen Reader Tests**:
+   - Content descriptions present for all keys
+   - Accessibility actions properly defined
+   - Focus order logical and complete
+   - Live regions update correctly
+   - Custom views expose semantics
+
+3. **Keyboard Navigation Tests**:
+   - All features accessible via keyboard only
+   - Tab order follows visual layout
+   - Focus indicators visible
+   - No keyboard traps
+   - Shortcuts documented and functional
+
+4. **Motor Accessibility Tests**:
+   - Slow Keys: Verify rejection of short presses
+   - Sticky Keys: Verify modifier latching/locking
+   - Bounce Keys: Verify debouncing logic
+   - Mouse Keys: Verify cursor control accuracy
+
+5. **Voice Guidance Tests**:
+   - TTS initialization successful
+   - Key descriptions accurate
+   - Speech rate/pitch configurable
+   - Utterances queued properly
+
+6. **Switch Access Tests**:
+   - Scanning advances correctly
+   - Selection activates proper key
+   - Auto-scan timing accurate
+   - Manual scan responsive
+
+7. **Timing Tests** (WCAG 2.2):
+   - No hard time limits
+   - User can extend timeouts
+   - Auto-save for long forms
+   - Session warnings before timeout
+
+8. **Error Identification** (WCAG 3.3.1):
+   - Invalid input clearly identified
+   - Error messages descriptive
+   - Suggestions provided
+   - Focus moved to error
+
+**User Impact**: No automated validation of accessibility compliance. Regressions go unnoticed. WCAG violations discovered only through manual testing or user complaints. Legal compliance risk. Difficult to maintain accessibility standards.
+
+**Bug ID**: #379
+
+**Severity**: **MEDIUM** (Accessibility - no automated testing increases regression risk)
+
+**Fix Required**:
+Create AccessibilityTestSuite.kt with comprehensive WCAG 2.1 automated tests.
+
+**Estimated Effort**: 4-5 weeks
+
+---
+

@@ -13376,3 +13376,275 @@ class LayoutSwitchAnimator {
 
 **Impact**: Layout switching is instant with no visual continuity. Jarring user experience.
 
+
+---
+
+## File 134: KeyRepeatHandler.java - COMPLETELY MISSING
+
+**Original Java**: KeyRepeatHandler.java (estimated 100-150 lines)
+**Kotlin Implementation**: ❌ DOES NOT EXIST
+**Purpose**: Auto-repeat for held keys (backspace, arrows, etc.)
+**Classification**: ❌ HIGH PRIORITY - Key repeat functionality missing
+
+### **🐛 BUG #330: KEY REPEAT HANDLER COMPLETELY MISSING (HIGH PRIORITY)**
+
+**Expected Java Implementation** (100-150 lines):
+```java
+class KeyRepeatHandler {
+    private Handler repeatHandler;
+    private static final long INITIAL_DELAY = 500; // 500ms before repeat starts
+    private static final long REPEAT_INTERVAL = 50; // 50ms between repeats
+    
+    private Runnable repeatAction;
+    private boolean isRepeating = false;
+    
+    void startRepeat(KeyValue keyValue, Runnable action) {
+        this.repeatAction = action;
+        
+        // Execute immediately
+        action.run();
+        
+        // Schedule repeat after initial delay
+        repeatHandler.postDelayed(() -> {
+            isRepeating = true;
+            scheduleNextRepeat();
+        }, INITIAL_DELAY);
+    }
+    
+    private void scheduleNextRepeat() {
+        if (!isRepeating) return;
+        
+        repeatAction.run();
+        repeatHandler.postDelayed(this::scheduleNextRepeat, REPEAT_INTERVAL);
+    }
+    
+    void stopRepeat() {
+        isRepeating = false;
+        repeatHandler.removeCallbacksAndMessages(null);
+    }
+    
+    boolean shouldRepeat(KeyValue keyValue) {
+        // Only certain keys should repeat
+        if (keyValue instanceof EventKey) {
+            EventKey event = (EventKey) keyValue;
+            return event.eventType == EventType.DELETE ||
+                   event.eventType == EventType.ARROW_LEFT ||
+                   event.eventType == EventType.ARROW_RIGHT ||
+                   event.eventType == EventType.ARROW_UP ||
+                   event.eventType == EventType.ARROW_DOWN;
+        }
+        
+        return false;
+    }
+}
+```
+
+**Missing Features**:
+1. ❌ **Key auto-repeat** - Hold key to repeat
+2. ❌ **Initial delay** - Pause before repeat starts
+3. ❌ **Repeat interval** - Configurable speed
+4. ❌ **Accelerating repeat** - Speed up over time
+5. ❌ **Repeat for arrows** - Navigation keys
+6. ❌ **Repeat for backspace** - Fast deletion
+7. ❌ **Repeat for space** - Multiple spaces
+8. ❌ **Custom repeat config** - Per-key settings
+
+**Impact**: Users must tap repeatedly for multiple deletions. NO hold-to-repeat for backspace/arrows.
+
+---
+
+## File 135: One-HandedModeManager.java - COMPLETELY MISSING
+
+**Original Java**: One-HandedModeManager.java (estimated 150-200 lines)
+**Kotlin Implementation**: ❌ DOES NOT EXIST
+**Purpose**: One-handed keyboard mode (compact, left/right aligned)
+**Classification**: ⚠️ MEDIUM PRIORITY - Accessibility feature missing
+
+### **🐛 BUG #331: ONE-HANDED MODE MANAGER COMPLETELY MISSING (MEDIUM PRIORITY)**
+
+**Expected Java Implementation** (150-200 lines):
+```java
+class OneHandedModeManager {
+    enum Position {
+        LEFT, RIGHT, CENTER, FLOATING
+    }
+    
+    private Position currentPosition = Position.CENTER;
+    private float scaleFactor = 0.8f; // 80% of full width
+    
+    void enableOneHandedMode(Position position) {
+        this.currentPosition = position;
+        applyOneHandedLayout();
+    }
+    
+    private void applyOneHandedLayout() {
+        View keyboardView = getKeyboardView();
+        int screenWidth = getScreenWidth();
+        int keyboardWidth = (int)(screenWidth * scaleFactor);
+        
+        // Resize keyboard
+        ViewGroup.LayoutParams params = keyboardView.getLayoutParams();
+        params.width = keyboardWidth;
+        keyboardView.setLayoutParams(params);
+        
+        // Position keyboard
+        switch (currentPosition) {
+            case LEFT:
+                keyboardView.setTranslationX(0);
+                break;
+            case RIGHT:
+                keyboardView.setTranslationX(screenWidth - keyboardWidth);
+                break;
+            case CENTER:
+                keyboardView.setTranslationX((screenWidth - keyboardWidth) / 2);
+                break;
+            case FLOATING:
+                // Allow dragging to any position
+                enableFloatingMode(keyboardView);
+                break;
+        }
+        
+        // Animate transition
+        keyboardView.animate()
+            .setDuration(200)
+            .start();
+    }
+    
+    void disableOneHandedMode() {
+        currentPosition = Position.CENTER;
+        scaleFactor = 1.0f;
+        applyOneHandedLayout();
+    }
+    
+    void setScaleFactor(float scale) {
+        this.scaleFactor = Math.max(0.5f, Math.min(1.0f, scale));
+        applyOneHandedLayout();
+    }
+}
+```
+
+**Missing Features**:
+1. ❌ **One-handed mode** - Compact keyboard
+2. ❌ **Left/right positioning** - Thumb-friendly placement
+3. ❌ **Adjustable size** - Scale keyboard
+4. ❌ **Floating mode** - Draggable keyboard
+5. ❌ **Quick toggle** - Gesture/button to enable
+6. ❌ **Position persistence** - Remember setting
+7. ❌ **Landscape support** - Different positions
+8. ❌ **Swipe to move** - Gesture repositioning
+
+**Impact**: Poor usability on large phones. NO thumb-friendly one-handed typing mode.
+
+---
+
+## File 136: FloatingKeyboardManager.java - COMPLETELY MISSING
+
+**Original Java**: FloatingKeyboardManager.java (estimated 200-250 lines)
+**Kotlin Implementation**: ❌ DOES NOT EXIST
+**Purpose**: Floating/movable keyboard window
+**Classification**: ⚠️ MEDIUM PRIORITY - Advanced feature missing
+
+### **🐛 BUG #332: FLOATING KEYBOARD MANAGER COMPLETELY MISSING (MEDIUM PRIORITY)**
+
+**Expected Java Implementation** (200-250 lines):
+```java
+class FloatingKeyboardManager {
+    private WindowManager windowManager;
+    private View floatingKeyboard;
+    private WindowManager.LayoutParams layoutParams;
+    
+    private int lastTouchX, lastTouchY;
+    private boolean isDragging = false;
+    
+    void enableFloatingMode() {
+        if (floatingKeyboard != null) return;
+        
+        // Create floating window
+        layoutParams = new WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT
+        );
+        
+        layoutParams.gravity = Gravity.CENTER;
+        
+        // Create keyboard view
+        floatingKeyboard = inflateFloatingKeyboard();
+        setupDragListener();
+        
+        // Add to window
+        windowManager.addView(floatingKeyboard, layoutParams);
+    }
+    
+    private void setupDragListener() {
+        View dragHandle = floatingKeyboard.findViewById(R.id.drag_handle);
+        
+        dragHandle.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    lastTouchX = (int) event.getRawX();
+                    lastTouchY = (int) event.getRawY();
+                    isDragging = true;
+                    break;
+                    
+                case MotionEvent.ACTION_MOVE:
+                    if (isDragging) {
+                        int deltaX = (int) event.getRawX() - lastTouchX;
+                        int deltaY = (int) event.getRawY() - lastTouchY;
+                        
+                        layoutParams.x += deltaX;
+                        layoutParams.y += deltaY;
+                        
+                        windowManager.updateViewLayout(floatingKeyboard, layoutParams);
+                        
+                        lastTouchX = (int) event.getRawX();
+                        lastTouchY = (int) event.getRawY();
+                    }
+                    break;
+                    
+                case MotionEvent.ACTION_UP:
+                    isDragging = false;
+                    snapToEdge(); // Optional: snap to nearest edge
+                    break;
+            }
+            return true;
+        });
+    }
+    
+    void disableFloatingMode() {
+        if (floatingKeyboard != null) {
+            windowManager.removeView(floatingKeyboard);
+            floatingKeyboard = null;
+        }
+    }
+    
+    private void snapToEdge() {
+        // Snap keyboard to nearest screen edge if close enough
+        int screenWidth = getScreenWidth();
+        int snapThreshold = 50;
+        
+        if (layoutParams.x < snapThreshold) {
+            layoutParams.x = 0;
+        } else if (layoutParams.x > screenWidth - snapThreshold) {
+            layoutParams.x = screenWidth - floatingKeyboard.getWidth();
+        }
+        
+        windowManager.updateViewLayout(floatingKeyboard, layoutParams);
+    }
+}
+```
+
+**Missing Features**:
+1. ❌ **Floating window** - Draggable keyboard
+2. ❌ **Drag handle** - Move keyboard around screen
+3. ❌ **Position persistence** - Remember location
+4. ❌ **Snap to edge** - Magnetic edges
+5. ❌ **Resize handle** - Adjust size
+6. ❌ **Transparency** - See-through keyboard
+7. ❌ **Always on top** - Overlay mode
+8. ❌ **Quick minimize** - Collapse to icon
+
+**Impact**: NO floating keyboard option. Users cannot position keyboard freely on screen.
+

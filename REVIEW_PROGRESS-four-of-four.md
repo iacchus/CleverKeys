@@ -16906,3 +16906,1104 @@ Create GestureCustomizer.kt with multi-touch detection.
 
 ---
 
+## File 154: ShortcutManager.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 200-300 lines
+**Package**: juloo.keyboard2.shortcuts
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Keyboard Shortcuts System**:
+```java
+public class ShortcutManager {
+    private Map<KeyCombination, ShortcutAction> shortcuts = new HashMap<>();
+    private List<KeyEvent> recentKeys = new ArrayList<>();
+    
+    // Register shortcut
+    public void registerShortcut(KeyCombination combination, ShortcutAction action) {
+        shortcuts.put(combination, action);
+        saveShortcuts();
+    }
+    
+    // Check if key combination triggers shortcut
+    public boolean checkShortcut(KeyValue keyValue, Pointers.Modifiers modifiers) {
+        // Add to recent key history
+        recentKeys.add(new KeyEvent(keyValue, modifiers, System.currentTimeMillis()));
+        
+        // Keep only last 5 keys
+        if (recentKeys.size() > 5) {
+            recentKeys.remove(0);
+        }
+        
+        // Check all registered shortcuts
+        for (Map.Entry<KeyCombination, ShortcutAction> entry : shortcuts.entrySet()) {
+            if (entry.getKey().matches(recentKeys, modifiers)) {
+                entry.getValue().execute(this);
+                return true;
+            }
+        }
+        
+        return false;
+    }
+}
+```
+
+**Shortcut Definitions**:
+```java
+// Key combination
+public class KeyCombination {
+    List<KeyValue> keys;
+    Pointers.Modifiers requiredModifiers;
+    boolean requiresExactModifiers; // Ctrl+A vs Ctrl+Shift+A
+    
+    public boolean matches(List<KeyEvent> recentKeys, Pointers.Modifiers currentModifiers) {
+        // Check if modifiers match
+        if (requiresExactModifiers) {
+            if (!currentModifiers.equals(requiredModifiers)) {
+                return false;
+            }
+        } else {
+            if (!currentModifiers.contains(requiredModifiers)) {
+                return false;
+            }
+        }
+        
+        // Check if key sequence matches
+        if (recentKeys.size() < keys.size()) {
+            return false;
+        }
+        
+        for (int i = 0; i < keys.size(); i++) {
+            KeyEvent event = recentKeys.get(recentKeys.size() - keys.size() + i);
+            if (!event.keyValue.equals(keys.get(i))) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // Builder for convenience
+    public static KeyCombination ctrl(KeyValue key) {
+        return new KeyCombination(
+            List.of(key),
+            new Pointers.Modifiers(0, 0, 0, 0, true, false, false, false),
+            false
+        );
+    }
+    
+    public static KeyCombination ctrlShift(KeyValue key) {
+        return new KeyCombination(
+            List.of(key),
+            new Pointers.Modifiers(0, 0, 0, 0, true, false, true, false),
+            false
+        );
+    }
+}
+
+// Shortcut action
+public interface ShortcutAction {
+    void execute(ShortcutManager manager);
+    String getDescription();
+}
+
+// Common shortcut actions
+public class SelectAllAction implements ShortcutAction {
+    @Override
+    public void execute(ShortcutManager manager) {
+        InputConnection ic = manager.getInputConnection();
+        ic.performContextMenuAction(android.R.id.selectAll);
+    }
+    
+    @Override
+    public String getDescription() {
+        return "Select all text";
+    }
+}
+
+public class CopyAction implements ShortcutAction {
+    @Override
+    public void execute(ShortcutManager manager) {
+        InputConnection ic = manager.getInputConnection();
+        ic.performContextMenuAction(android.R.id.copy);
+    }
+    
+    @Override
+    public String getDescription() {
+        return "Copy selected text";
+    }
+}
+```
+
+**Default Shortcuts**:
+```java
+// Standard shortcuts (Ctrl+C, Ctrl+V, etc.)
+public static final Map<KeyCombination, ShortcutAction> DEFAULT_SHORTCUTS = Map.of(
+    KeyCombination.ctrl(KeyValue.KEY_A), new SelectAllAction(),
+    KeyCombination.ctrl(KeyValue.KEY_C), new CopyAction(),
+    KeyCombination.ctrl(KeyValue.KEY_X), new CutAction(),
+    KeyCombination.ctrl(KeyValue.KEY_V), new PasteAction(),
+    KeyCombination.ctrl(KeyValue.KEY_Z), new UndoAction(),
+    KeyCombination.ctrlShift(KeyValue.KEY_Z), new RedoAction(),
+    KeyCombination.ctrl(KeyValue.KEY_S), new SaveAction(),
+    KeyCombination.ctrl(KeyValue.KEY_F), new FindAction(),
+    KeyCombination.ctrl(KeyValue.KEY_BACKSPACE), new DeleteWordAction(),
+    KeyCombination.ctrl(KeyValue.ARROW_LEFT), new WordLeftAction(),
+    KeyCombination.ctrl(KeyValue.ARROW_RIGHT), new WordRightAction()
+);
+
+// Emacs-style shortcuts (optional)
+public static final Map<KeyCombination, ShortcutAction> EMACS_SHORTCUTS = Map.of(
+    KeyCombination.ctrl(KeyValue.KEY_W), new DeleteWordAction(),
+    KeyCombination.ctrl(KeyValue.KEY_U), new DeleteLineAction(),
+    KeyCombination.ctrl(KeyValue.KEY_K), new CutToEndAction(),
+    KeyCombination.ctrl(KeyValue.KEY_Y), new PasteAction()
+);
+
+// Vim-style shortcuts (optional)
+public static final Map<KeyCombination, ShortcutAction> VIM_SHORTCUTS = Map.of(
+    KeyCombination.of(KeyValue.KEY_D, KeyValue.KEY_D), new DeleteLineAction(),
+    KeyCombination.of(KeyValue.KEY_Y, KeyValue.KEY_Y), new CopyLineAction(),
+    KeyCombination.of(KeyValue.KEY_P), new PasteAction()
+);
+```
+
+**Shortcut Customization UI**:
+```java
+// Shortcut editor
+public class ShortcutEditorActivity extends Activity {
+    private RecyclerView shortcutList;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.shortcut_editor);
+        
+        shortcutList = findViewById(R.id.shortcut_list);
+        
+        // Load all shortcuts
+        List<ShortcutItem> items = loadShortcuts();
+        ShortcutAdapter adapter = new ShortcutAdapter(items, this::onShortcutClick);
+        shortcutList.setAdapter(adapter);
+        
+        // Add shortcut button
+        findViewById(R.id.add_shortcut).setOnClickListener(v -> {
+            showShortcutDialog(null);
+        });
+        
+        // Import/export buttons
+        findViewById(R.id.import_shortcuts).setOnClickListener(v -> importShortcuts());
+        findViewById(R.id.export_shortcuts).setOnClickListener(v -> exportShortcuts());
+    }
+    
+    private void showShortcutDialog(ShortcutItem item) {
+        ShortcutEditDialog dialog = new ShortcutEditDialog(this);
+        
+        if (item != null) {
+            dialog.setShortcut(item.combination);
+            dialog.setAction(item.action);
+        }
+        
+        dialog.setOnSaveListener((combination, action) -> {
+            manager.registerShortcut(combination, action);
+            refreshList();
+        });
+        
+        dialog.show();
+    }
+}
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **Keyboard shortcuts** - No Ctrl+C/V/X/A/Z
+2. ❌ **Shortcut customization** - No custom shortcuts
+3. ❌ **Shortcut editor** - No UI to edit shortcuts
+4. ❌ **Multiple shortcut sets** - No Emacs/Vim modes
+5. ❌ **Shortcut conflicts** - No conflict detection
+6. ❌ **Shortcut import/export** - No sharing
+7. ❌ **Shortcut hints** - No tooltip/overlay
+8. ❌ **Chord shortcuts** - No multi-key sequences
+9. ❌ **Context-sensitive** - No app-specific shortcuts
+10. ❌ **Shortcut recording** - No key combo capture
+
+### **Kotlin Status**:
+**File**: None - completely missing
+**Impact**: No keyboard shortcuts available
+
+### **🐛 BUG #356: SHORTCUTMANAGER MISSING (HIGH)**
+
+**Severity**: ❌ HIGH  
+**Category**: Advanced Input Methods  
+**Impact**: No keyboard shortcuts
+
+**Description**:
+No keyboard shortcut system. Standard shortcuts don't work:
+- Ctrl+C (copy) - not working
+- Ctrl+V (paste) - not working
+- Ctrl+Z (undo) - not working
+- Ctrl+A (select all) - not working
+- Ctrl+Backspace (delete word) - not working
+
+Power users expect these shortcuts to work system-wide.
+
+**User Impact**:
+- ❌ No Ctrl+C/V/X/A/Z shortcuts
+- ❌ Cannot customize shortcuts
+- ❌ No Emacs/Vim keybindings
+- ❌ Power users frustrated
+- ❌ Workflow efficiency reduced
+
+**Fix Required**:
+Create ShortcutManager.kt with standard shortcuts.
+
+**Estimated Effort**: 2 weeks
+
+---
+
+## File 155: QuickTextExpander.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 200-300 lines
+**Package**: juloo.keyboard2.expansion
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Text Expansion System**:
+```java
+public class QuickTextExpander {
+    private Map<String, String> expansions = new HashMap<>();
+    private StringBuilder currentWord = new StringBuilder();
+    
+    // Add expansion
+    public void addExpansion(String shortcut, String expandedText) {
+        expansions.put(shortcut, expandedText);
+        saveExpansions();
+    }
+    
+    // Check if word should be expanded
+    public String checkExpansion(String word) {
+        return expansions.get(word);
+    }
+    
+    // Handle text input
+    public boolean onTextInput(CharSequence text) {
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            
+            if (Character.isWhitespace(c)) {
+                // Word boundary - check for expansion
+                String word = currentWord.toString();
+                String expansion = checkExpansion(word);
+                
+                if (expansion != null) {
+                    // Replace shortcut with expansion
+                    deleteText(word.length());
+                    insertText(expansion);
+                    insertText(String.valueOf(c)); // Add space/newline
+                    currentWord.setLength(0);
+                    return true;
+                }
+                
+                currentWord.setLength(0);
+            } else {
+                currentWord.append(c);
+            }
+        }
+        
+        return false;
+    }
+}
+```
+
+**Default Expansions**:
+```java
+// Common abbreviations
+public static final Map<String, String> DEFAULT_EXPANSIONS = Map.of(
+    // Email/phone
+    "@@", "user@example.com",
+    "tel", "+1-555-0123",
+    
+    // Addresses
+    "addr", "123 Main St, City, State 12345",
+    
+    // Common phrases
+    "omw", "On my way!",
+    "brb", "Be right back",
+    "ty", "Thank you",
+    "yw", "You're welcome",
+    "np", "No problem",
+    
+    // Date/time
+    "ddate", getCurrentDate(),  // Expands to current date
+    "ttime", getCurrentTime(),  // Expands to current time
+    
+    // Signatures
+    "sig", "Best regards,\nYour Name",
+    
+    // Code snippets
+    "forloop", "for (int i = 0; i < length; i++) {\n    \n}",
+    "ifelse", "if (condition) {\n    \n} else {\n    \n}"
+);
+```
+
+**Dynamic Expansions**:
+```java
+// Expansions with variables
+public class DynamicExpansion {
+    String template;
+    List<Variable> variables;
+    
+    public String expand(Map<String, String> values) {
+        String result = template;
+        
+        for (Variable var : variables) {
+            String value = values.get(var.name);
+            if (value == null) {
+                value = var.getDefaultValue();
+            }
+            
+            result = result.replace("${" + var.name + "}", value);
+        }
+        
+        return result;
+    }
+}
+
+// Built-in variables
+public class Variable {
+    String name;
+    VariableType type;
+    
+    public enum VariableType {
+        CURRENT_DATE,      // Today's date
+        CURRENT_TIME,      // Current time
+        CURRENT_DAY,       // Monday, Tuesday, etc.
+        CLIPBOARD,         // Clipboard contents
+        SELECTION,         // Currently selected text
+        CURSOR_POSITION,   // ${cursor} marks cursor position
+        CUSTOM             // User input
+    }
+    
+    public String getDefaultValue() {
+        switch (type) {
+            case CURRENT_DATE:
+                return new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            case CURRENT_TIME:
+                return new SimpleDateFormat("HH:mm").format(new Date());
+            case CURRENT_DAY:
+                return new SimpleDateFormat("EEEE").format(new Date());
+            case CLIPBOARD:
+                return getClipboardText();
+            default:
+                return "";
+        }
+    }
+}
+
+// Example dynamic expansions
+Map.of(
+    "meeting", "Meeting scheduled for ${date} at ${time}",
+    "email", "Hi ${name},\n\n${body}\n\nBest regards,\n${sender}",
+    "bug", "Bug Report:\n\nSummary: ${summary}\nSteps: ${steps}\nExpected: ${expected}\nActual: ${actual}"
+);
+```
+
+**Expansion Management UI**:
+```java
+// Expansion editor
+public class ExpansionEditorActivity extends Activity {
+    private RecyclerView expansionList;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.expansion_editor);
+        
+        expansionList = findViewById(R.id.expansion_list);
+        
+        // Load expansions
+        List<Expansion> expansions = loadExpansions();
+        ExpansionAdapter adapter = new ExpansionAdapter(expansions, this::onExpansionClick);
+        expansionList.setAdapter(adapter);
+        
+        // Add expansion button
+        findViewById(R.id.add_expansion).setOnClickListener(v -> {
+            showExpansionDialog(null);
+        });
+    }
+    
+    private void showExpansionDialog(Expansion expansion) {
+        ExpansionEditDialog dialog = new ExpansionEditDialog(this);
+        
+        if (expansion != null) {
+            dialog.setShortcut(expansion.shortcut);
+            dialog.setExpandedText(expansion.expandedText);
+        }
+        
+        dialog.setOnSaveListener((shortcut, expandedText) -> {
+            expander.addExpansion(shortcut, expandedText);
+            refreshList();
+        });
+        
+        dialog.show();
+    }
+}
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **Text expansion** - No abbreviation expansion
+2. ❌ **Dynamic expansions** - No variables (date/time)
+3. ❌ **Expansion library** - No default abbreviations
+4. ❌ **Expansion editor** - No UI to manage expansions
+5. ❌ **Multi-line expansions** - No template support
+6. ❌ **Cursor positioning** - No ${cursor} variable
+7. ❌ **Import/export** - No expansion sharing
+8. ❌ **Expansion categories** - No organization
+9. ❌ **Case sensitivity** - No case-insensitive matching
+10. ❌ **Expansion preview** - No before-commit preview
+
+### **Kotlin Status**:
+**File**: None - completely missing
+**Impact**: No text expansion/abbreviations
+
+### **🐛 BUG #357: QUICKTEXTEXPANDER MISSING (HIGH)**
+
+**Severity**: ❌ HIGH  
+**Category**: Advanced Input Methods  
+**Impact**: No text expansion
+
+**Description**:
+No text expansion system. Users cannot create shortcuts for:
+- Email addresses ("@@" → "user@example.com")
+- Phone numbers ("tel" → "+1-555-0123")
+- Common phrases ("omw" → "On my way!")
+- Signatures ("sig" → email signature)
+- Code snippets ("forloop" → for loop template)
+- Dynamic content (current date/time)
+
+**User Impact**:
+- ❌ Must type full email/phone repeatedly
+- ❌ No quick phrase shortcuts
+- ❌ No signature shortcuts
+- ❌ No code snippet expansion
+- ❌ Productivity reduced for power users
+
+**Fix Required**:
+Create QuickTextExpander.kt with expansion system.
+
+**Estimated Effort**: 2 weeks
+
+---
+
+## File 156: PhraseBook.java - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 250-350 lines
+**Package**: juloo.keyboard2.phrases
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Phrase Management**:
+```java
+public class PhraseBook {
+    private Map<String, List<Phrase>> phraseCategories = new HashMap<>();
+    private List<Phrase> recentPhrases = new ArrayList<>();
+    private List<Phrase> favoritePhrases = new ArrayList<>();
+    
+    // Phrase data structure
+    public static class Phrase {
+        String id;
+        String text;
+        String category;
+        int useCount;
+        long lastUsed;
+        boolean isFavorite;
+        List<String> tags;
+        
+        public Phrase(String text, String category) {
+            this.id = UUID.randomUUID().toString();
+            this.text = text;
+            this.category = category;
+            this.useCount = 0;
+            this.isFavorite = false;
+            this.tags = new ArrayList<>();
+        }
+    }
+    
+    // Add phrase
+    public void addPhrase(Phrase phrase) {
+        // Add to category
+        if (!phraseCategories.containsKey(phrase.category)) {
+            phraseCategories.put(phrase.category, new ArrayList<>());
+        }
+        phraseCategories.get(phrase.category).add(phrase);
+        
+        // Save to database
+        savePhraseToDatabase(phrase);
+    }
+    
+    // Get phrases by category
+    public List<Phrase> getPhrasesByCategory(String category) {
+        return phraseCategories.getOrDefault(category, new ArrayList<>());
+    }
+    
+    // Search phrases
+    public List<Phrase> searchPhrases(String query) {
+        List<Phrase> results = new ArrayList<>();
+        String lowerQuery = query.toLowerCase();
+        
+        for (List<Phrase> phrases : phraseCategories.values()) {
+            for (Phrase phrase : phrases) {
+                if (phrase.text.toLowerCase().contains(lowerQuery) ||
+                    phrase.tags.stream().anyMatch(tag -> tag.toLowerCase().contains(lowerQuery))) {
+                    results.add(phrase);
+                }
+            }
+        }
+        
+        // Sort by relevance
+        results.sort((p1, p2) -> {
+            // Exact match
+            if (p1.text.equalsIgnoreCase(query)) return -1;
+            if (p2.text.equalsIgnoreCase(query)) return 1;
+            
+            // Starts with query
+            boolean p1Starts = p1.text.toLowerCase().startsWith(lowerQuery);
+            boolean p2Starts = p2.text.toLowerCase().startsWith(lowerQuery);
+            if (p1Starts && !p2Starts) return -1;
+            if (p2Starts && !p1Starts) return 1;
+            
+            // Use count
+            return Integer.compare(p2.useCount, p1.useCount);
+        });
+        
+        return results;
+    }
+    
+    // Track usage
+    public void recordPhraseUsage(Phrase phrase) {
+        phrase.useCount++;
+        phrase.lastUsed = System.currentTimeMillis();
+        
+        // Add to recent phrases
+        recentPhrases.remove(phrase); // Remove if already present
+        recentPhrases.add(0, phrase); // Add to front
+        
+        // Keep only last 20
+        if (recentPhrases.size() > 20) {
+            recentPhrases.remove(recentPhrases.size() - 1);
+        }
+        
+        updatePhrasein Database(phrase);
+    }
+}
+```
+
+**Default Phrase Categories**:
+```java
+// Pre-populated phrase categories
+public static final Map<String, List<String>> DEFAULT_PHRASES = Map.of(
+    "Greetings", List.of(
+        "Hello!",
+        "Hi there!",
+        "Good morning!",
+        "Good afternoon!",
+        "Good evening!",
+        "Hey, how are you?",
+        "Nice to meet you!",
+        "How's it going?"
+    ),
+    
+    "Responses", List.of(
+        "Thank you!",
+        "You're welcome!",
+        "No problem!",
+        "Sure thing!",
+        "Of course!",
+        "Sounds good!",
+        "I agree",
+        "That works for me"
+    ),
+    
+    "Apologies", List.of(
+        "Sorry about that!",
+        "My apologies",
+        "I apologize",
+        "Excuse me",
+        "Pardon me",
+        "Sorry for the delay"
+    ),
+    
+    "Questions", List.of(
+        "What do you think?",
+        "Can you help me?",
+        "Do you have time?",
+        "When are you free?",
+        "Where should we meet?",
+        "How does that sound?"
+    ),
+    
+    "Business", List.of(
+        "Best regards,",
+        "Kind regards,",
+        "Sincerely,",
+        "Looking forward to hearing from you",
+        "Please let me know",
+        "I'll get back to you soon",
+        "Thank you for your time"
+    ),
+    
+    "Casual", List.of(
+        "lol",
+        "haha",
+        "See you later!",
+        "Talk to you soon!",
+        "Bye!",
+        "Take care!",
+        "Good luck!",
+        "Congrats!"
+    )
+);
+```
+
+**Phrase Book UI**:
+```java
+// Phrase picker dialog
+public class PhrasePickerDialog extends BottomSheetDialog {
+    private RecyclerView phraseList;
+    private EditText searchBox;
+    private ChipGroup categoryChips;
+    private PhraseBookAdapter adapter;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.phrase_picker);
+        
+        // Search box
+        searchBox = findViewById(R.id.search_box);
+        searchBox.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterPhrases(s.toString());
+            }
+        });
+        
+        // Category chips
+        categoryChips = findViewById(R.id.category_chips);
+        for (String category : phraseBook.getCategories()) {
+            Chip chip = new Chip(getContext());
+            chip.setText(category);
+            chip.setCheckable(true);
+            chip.setOnClickListener(v -> {
+                if (chip.isChecked()) {
+                    showCategory(category);
+                } else {
+                    showAllPhrases();
+                }
+            });
+            categoryChips.addView(chip);
+        }
+        
+        // Phrase list
+        phraseList = findViewById(R.id.phrase_list);
+        adapter = new PhraseBookAdapter(phraseBook.getAllPhrases(), this::onPhraseSelected);
+        phraseList.setAdapter(adapter);
+        
+        // Tabs: Recent, Favorites, All
+        TabLayout tabs = findViewById(R.id.tabs);
+        tabs.addTab(tabs.newTab().setText("Recent"));
+        tabs.addTab(tabs.newTab().setText("Favorites"));
+        tabs.addTab(tabs.newTab().setText("All"));
+        
+        tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                switch (tab.getPosition()) {
+                    case 0:
+                        showRecentPhrases();
+                        break;
+                    case 1:
+                        showFavoritePhrases();
+                        break;
+                    case 2:
+                        showAllPhrases();
+                        break;
+                }
+            }
+        });
+    }
+    
+    private void onPhraseSelected(Phrase phrase) {
+        // Insert phrase
+        insertText(phrase.text);
+        
+        // Record usage
+        phraseBook.recordPhraseUsage(phrase);
+        
+        // Dismiss dialog
+        dismiss();
+    }
+}
+
+// Phrase editor activity
+public class PhraseEditorActivity extends Activity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.phrase_editor);
+        
+        EditText phraseText = findViewById(R.id.phrase_text);
+        Spinner categorySpinner = findViewById(R.id.category_spinner);
+        ChipGroup tagsChipGroup = findViewById(R.id.tags);
+        CheckBox favoriteCheckbox = findViewById(R.id.favorite_checkbox);
+        
+        // Save button
+        findViewById(R.id.save_button).setOnClickListener(v -> {
+            String text = phraseText.getText().toString();
+            String category = categorySpinner.getSelectedItem().toString();
+            boolean isFavorite = favoriteCheckbox.isChecked();
+            
+            List<String> tags = new ArrayList<>();
+            for (int i = 0; i < tagsChipGroup.getChildCount(); i++) {
+                Chip chip = (Chip) tagsChipGroup.getChildAt(i);
+                tags.add(chip.getText().toString());
+            }
+            
+            Phrase phrase = new Phrase(text, category);
+            phrase.isFavorite = isFavorite;
+            phrase.tags = tags;
+            
+            phraseBook.addPhrase(phrase);
+            finish();
+        });
+    }
+}
+```
+
+**Phrase Import/Export**:
+```java
+// Export phrases to JSON
+public String exportPhrasesToJson() {
+    JSONObject root = new JSONObject();
+    JSONArray categories = new JSONArray();
+    
+    for (Map.Entry<String, List<Phrase>> entry : phraseCategories.entrySet()) {
+        JSONObject category = new JSONObject();
+        category.put("name", entry.getKey());
+        
+        JSONArray phrases = new JSONArray();
+        for (Phrase phrase : entry.getValue()) {
+            JSONObject phraseObj = new JSONObject();
+            phraseObj.put("text", phrase.text);
+            phraseObj.put("tags", new JSONArray(phrase.tags));
+            phraseObj.put("favorite", phrase.isFavorite);
+            phrases.put(phraseObj);
+        }
+        
+        category.put("phrases", phrases);
+        categories.put(category);
+    }
+    
+    root.put("categories", categories);
+    root.put("version", "1.0");
+    
+    return root.toString(2); // Pretty print with indent 2
+}
+
+// Import phrases from JSON
+public void importPhrasesFromJson(String json) throws JSONException {
+    JSONObject root = new JSONObject(json);
+    JSONArray categories = root.getJSONArray("categories");
+    
+    for (int i = 0; i < categories.length(); i++) {
+        JSONObject category = categories.getJSONObject(i);
+        String categoryName = category.getString("name");
+        JSONArray phrases = category.getJSONArray("phrases");
+        
+        for (int j = 0; j < phrases.length(); j++) {
+            JSONObject phraseObj = phrases.getJSONObject(j);
+            
+            Phrase phrase = new Phrase(
+                phraseObj.getString("text"),
+                categoryName
+            );
+            
+            if (phraseObj.has("tags")) {
+                JSONArray tags = phraseObj.getJSONArray("tags");
+                for (int k = 0; k < tags.length(); k++) {
+                    phrase.tags.add(tags.getString(k));
+                }
+            }
+            
+            if (phraseObj.has("favorite")) {
+                phrase.isFavorite = phraseObj.getBoolean("favorite");
+            }
+            
+            addPhrase(phrase);
+        }
+    }
+}
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **Phrase library** - No pre-saved phrases
+2. ❌ **Phrase categories** - No organization (greetings, responses, etc.)
+3. ❌ **Phrase search** - No search/filter
+4. ❌ **Recent phrases** - No usage tracking
+5. ❌ **Favorite phrases** - No favorites
+6. ❌ **Phrase editor** - No UI to manage phrases
+7. ❌ **Phrase tags** - No tagging system
+8. ❌ **Phrase picker** - No quick insertion dialog
+9. ❌ **Import/export** - No phrase sharing
+10. ❌ **Multi-language phrases** - No per-language libraries
+
+### **Kotlin Status**:
+**File**: None - completely missing
+**Impact**: No phrase library/quick phrases
+
+### **🐛 BUG #358: PHRASEBOOK MISSING (MEDIUM)**
+
+**Severity**: ⚠️ MEDIUM  
+**Category**: Advanced Input Methods  
+**Impact**: No phrase library
+
+**Description**:
+No phrase book system. Users cannot save and reuse common phrases:
+- Greetings ("Hello!", "Good morning!")
+- Responses ("Thank you!", "No problem!")
+- Business phrases ("Best regards,", "Looking forward...")
+- Custom templates
+
+**User Impact**:
+- ❌ Must type common phrases repeatedly
+- ❌ No quick greeting insertion
+- ❌ No business phrase templates
+- ❌ Reduced productivity for frequent phrases
+
+**Fix Required**:
+Create PhraseBook.kt with category/search system.
+
+**Estimated Effort**: 2 weeks
+
+---
+
+## File 157: TypingPredictionEngine.java (Traditional) - COMPLETELY MISSING
+
+### Java File Analysis (Unexpected Keyboard)
+**Estimated Size**: 300-400 lines
+**Package**: juloo.keyboard2.prediction
+**Status**: 💀 **COMPLETELY MISSING IN KOTLIN**
+
+### **Core Functionality**:
+
+**Traditional N-gram Prediction** (for tap typing, NOT swipe):
+```java
+public class TypingPredictionEngine {
+    private BigramModel bigramModel;
+    private TrigramModel trigramModel;
+    private FrequencyModel frequencyModel;
+    private Dictionary dictionary;
+    
+    // Predict next words based on context
+    public List<String> predictNextWords(CharSequence context, int maxResults) {
+        // Extract last 2 words for context
+        List<String> words = extractWords(context);
+        String lastWord = words.isEmpty() ? null : words.get(words.size() - 1);
+        String secondLastWord = words.size() < 2 ? null : words.get(words.size() - 2);
+        
+        // Score all possible next words
+        Map<String, Double> scores = new HashMap<>();
+        
+        // Trigram predictions (highest weight)
+        if (secondLastWord != null && lastWord != null) {
+            Map<String, Double> trigramPredictions = trigramModel.predict(secondLastWord, lastWord);
+            for (Map.Entry<String, Double> entry : trigramPredictions.entrySet()) {
+                scores.put(entry.getKey(), entry.getValue() * 0.5);
+            }
+        }
+        
+        // Bigram predictions (medium weight)
+        if (lastWord != null) {
+            Map<String, Double> bigramPredictions = bigramModel.predict(lastWord);
+            for (Map.Entry<String, Double> entry : bigramPredictions.entrySet()) {
+                scores.merge(entry.getKey(), entry.getValue() * 0.3, Double::sum);
+            }
+        }
+        
+        // Frequency-based predictions (fallback)
+        Map<String, Double> frequencyPredictions = frequencyModel.getMostFrequent(100);
+        for (Map.Entry<String, Double> entry : frequencyPredictions.entrySet()) {
+            scores.merge(entry.getKey(), entry.getValue() * 0.2, Double::sum);
+        }
+        
+        // Sort by score and return top results
+        return scores.entrySet().stream()
+            .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+            .limit(maxResults)
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
+    }
+    
+    // Predict word completions for partial input
+    public List<String> predictCompletions(String partialWord, CharSequence context) {
+        // Get context predictions
+        List<String> contextPredictions = predictNextWords(context, 50);
+        
+        // Filter by partial match
+        List<String> matches = contextPredictions.stream()
+            .filter(word -> word.startsWith(partialWord.toLowerCase()))
+            .limit(3)
+            .collect(Collectors.toList());
+        
+        // If not enough context matches, add dictionary matches
+        if (matches.size() < 3) {
+            List<String> dictionaryMatches = dictionary.getWordsStartingWith(partialWord);
+            
+            // Sort by frequency
+            dictionaryMatches.sort((w1, w2) -> 
+                Double.compare(
+                    frequencyModel.getFrequency(w2),
+                    frequencyModel.getFrequency(w1)
+                )
+            );
+            
+            for (String word : dictionaryMatches) {
+                if (!matches.contains(word)) {
+                    matches.add(word);
+                    if (matches.size() >= 5) break;
+                }
+            }
+        }
+        
+        return matches;
+    }
+}
+```
+
+**Bigram Model**:
+```java
+// Already documented as File 57 (COMPLETELY MISSING - Bug #255)
+// This would track word pairs: "thank" → "you" (high probability)
+//                              "good" → "morning", "afternoon", "evening"
+```
+
+**Context-Aware Prediction**:
+```java
+// Adjust predictions based on input context
+public class ContextAwarePrediction {
+    
+    // Detect context type
+    public ContextType detectContext(CharSequence text) {
+        // Email address context
+        if (containsPattern(text, EMAIL_PATTERN)) {
+            return ContextType.EMAIL;
+        }
+        
+        // URL context
+        if (containsPattern(text, URL_PATTERN)) {
+            return ContextType.URL;
+        }
+        
+        // Phone number context
+        if (containsPattern(text, PHONE_PATTERN)) {
+            return ContextType.PHONE;
+        }
+        
+        // Date/time context
+        if (containsPattern(text, DATE_PATTERN)) {
+            return ContextType.DATE;
+        }
+        
+        // Sentence start (capitalize)
+        if (isSentenceStart(text)) {
+            return ContextType.SENTENCE_START;
+        }
+        
+        return ContextType.NORMAL;
+    }
+    
+    // Adjust predictions for context
+    public List<String> adjustForContext(List<String> predictions, ContextType context) {
+        switch (context) {
+            case EMAIL:
+                // Suggest email domains
+                return addEmailSuggestions(predictions);
+                
+            case URL:
+                // Suggest common TLDs
+                return addUrlSuggestions(predictions);
+                
+            case SENTENCE_START:
+                // Capitalize first letter
+                return capitalizePredictions(predictions);
+                
+            default:
+                return predictions;
+        }
+    }
+}
+```
+
+**User Learning**:
+```java
+// Already documented as File 65 (UserAdaptationManager - COMPLETELY MISSING - Bug #263)
+// This would learn user-specific patterns and adjust predictions
+```
+
+### **Missing Features in Kotlin**:
+
+1. ❌ **Traditional prediction** - No n-gram tap typing predictions
+2. ❌ **Bigram model** - No word pair predictions (Bug #255)
+3. ❌ **Trigram model** - No 3-word context
+4. ❌ **Word completion** - No prefix matching for tap typing
+5. ❌ **Context detection** - No email/URL awareness
+6. ❌ **Frequency model** - No word frequency tracking (Bug #312)
+7. ❌ **User learning** - No adaptation (Bug #263)
+8. ❌ **Capitalization** - No sentence-start detection
+9. ❌ **Domain suggestions** - No email/URL completions
+10. ❌ **Multi-model fusion** - No combined scoring
+
+### **Kotlin Status**:
+**File**: NeuralPredictionPipeline.kt (168 lines) - ONLY for swipe typing
+**Comparison**:
+- Java: 300-400 lines with traditional tap typing prediction
+- Kotlin: 168 lines ONNX-only (swipe typing only)
+- **Gap**: NO tap typing predictions!
+
+### **🐛 BUG #359: TYPINGPREDICTIONENGINE MISSING (CATASTROPHIC)**
+
+**Severity**: 💀 CATASTROPHIC  
+**Category**: Advanced Input Methods  
+**Impact**: No tap typing predictions
+
+**Description**:
+No traditional prediction engine for tap typing. CleverKeys only predicts for swipe gestures (ONNX neural), but has ZERO predictions for regular tap typing:
+- No next-word suggestions
+- No word completions
+- No context-aware predictions
+- No bigram/trigram models
+
+Users expect prediction bar to work for ALL typing, not just swipe.
+
+**User Impact**:
+- ❌ Tap typing has NO predictions
+- ❌ Must type every letter (no completions)
+- ❌ No "the", "and", "you" suggestions
+- ❌ Suggestion bar empty for tap typing
+- ❌ Major usability regression vs standard keyboards
+
+**Fix Required**:
+Create TypingPredictionEngine.kt with n-gram models.
+
+**Estimated Effort**: 3-4 weeks
+
+---
+

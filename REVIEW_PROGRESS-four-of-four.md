@@ -20626,3 +20626,330 @@ Create SwitchAccessSupport.kt with full scanning modes.
 
 ---
 
+
+---
+
+## **File 170: SlowKeysHandler.java** (200-300 lines estimated)
+
+**Category**: Category D - Accessibility Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Implements "Slow Keys" accessibility feature that requires keys to be pressed for a minimum duration before activation. Prevents accidental key presses from tremors or involuntary movements.
+
+**Missing Functionality**:
+
+1. **Key Hold Duration Detection**:
+```java
+public class SlowKeysHandler {
+    private long slowKeysDelay = 500;  // ms
+    private Map<KeyValue, Long> keyPressStartTimes;
+    
+    public boolean onKeyDown(KeyValue key, long timestamp) {
+        keyPressStartTimes.put(key, timestamp);
+        // Start visual feedback timer
+        // Play ticking sound if audio feedback enabled
+        return false;  // Don't activate yet
+    }
+    
+    public boolean onKeyUp(KeyValue key, long timestamp) {
+        Long startTime = keyPressStartTimes.remove(key);
+        if (startTime != null) {
+            long duration = timestamp - startTime;
+            if (duration >= slowKeysDelay) {
+                return true;  // Key activated
+            }
+        }
+        return false;  // Too short, rejected
+    }
+}
+```
+
+2. **Visual Feedback**:
+   - Progress bar showing hold duration
+   - Color changes (yellow → green when threshold reached)
+   - Key highlighting during press
+
+3. **Audio Feedback**:
+   - Ticking sound while held
+   - Acceptance beep when activated
+   - Rejection sound if released too early
+
+4. **Configurable Delays**:
+   - Short: 250ms
+   - Medium: 500ms
+   - Long: 1000ms
+   - Custom: user-defined
+
+5. **Acceptance Delay**:
+   - Option to require key release before activation
+   - Prevents double-press from single long press
+
+**User Impact**: Users with tremors, Parkinson's, or motor control issues cannot use keyboard reliably without this feature. Accidental key presses make typing frustrating or impossible.
+
+**Bug ID**: #372
+
+**Severity**: **HIGH** (Accessibility - blocks users with motor control disabilities)
+
+**Fix Required**:
+Create SlowKeysHandler.kt with duration tracking and progressive visual/audio feedback.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## **File 171: StickyKeysHandler.java** (250-350 lines estimated)
+
+**Category**: Category D - Accessibility Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Implements "Sticky Keys" accessibility feature that allows modifier keys (Shift, Ctrl, Alt) to be pressed sequentially instead of simultaneously. Critical for single-handed users or users who cannot press multiple keys at once.
+
+**Missing Functionality**:
+
+1. **Modifier State Management**:
+```java
+public class StickyKeysHandler {
+    public enum ModifierState {
+        NONE,      // Not pressed
+        LATCHED,   // Pressed once - applies to next key only
+        LOCKED     // Pressed twice - applies until pressed again
+    }
+    
+    private Map<ModifierKey, ModifierState> modifierStates;
+    
+    public void onModifierPress(ModifierKey key) {
+        ModifierState current = modifierStates.get(key);
+        switch (current) {
+            case NONE:
+                modifierStates.put(key, ModifierState.LATCHED);
+                playSound(SOUND_LATCHED);
+                break;
+            case LATCHED:
+                modifierStates.put(key, ModifierState.LOCKED);
+                playSound(SOUND_LOCKED);
+                break;
+            case LOCKED:
+                modifierStates.put(key, ModifierState.NONE);
+                playSound(SOUND_RELEASED);
+                break;
+        }
+    }
+    
+    public void onRegularKeyPress(KeyValue key) {
+        // Apply all LATCHED/LOCKED modifiers
+        // Clear all LATCHED modifiers after use
+        // Keep LOCKED modifiers active
+    }
+}
+```
+
+2. **Visual Indicators**:
+   - Border color changes:
+     - LATCHED: Yellow border
+     - LOCKED: Red border
+   - Icon overlays on modifier keys
+   - Status bar showing active modifiers
+
+3. **Audio Feedback**:
+   - Low beep: Modifier latched
+   - High beep: Modifier locked
+   - Click sound: Modifier released
+   - Different tones for Shift/Ctrl/Alt
+
+4. **Double-Press Detection**:
+   - 500ms window for second press
+   - Configurable timing
+   - Option to require triple-press for lock
+
+5. **Modifier Combinations**:
+   - Support multiple simultaneous latched modifiers
+   - Shift+Ctrl latched → types Ctrl+A when 'a' pressed
+   - Auto-clear after configured timeout (default: off)
+
+6. **Keyboard Shortcuts**:
+   - Two beeps to disable sticky keys temporarily
+   - Five Shift presses to toggle feature on/off
+
+**User Impact**: Single-handed users, users with limited hand mobility, and users who cannot press multiple keys simultaneously cannot access keyboard shortcuts (Ctrl+C, Ctrl+V, etc.) or type capital letters with punctuation.
+
+**Bug ID**: #373
+
+**Severity**: **CATASTROPHIC** (Accessibility - blocks basic functionality for motor-impaired users)
+
+**Fix Required**:
+Create StickyKeysHandler.kt with full state machine and multi-modifier support.
+
+**Estimated Effort**: 3-4 weeks
+
+---
+
+## **File 172: BounceKeysFilter.java** (150-250 lines estimated)
+
+**Category**: Category D - Accessibility Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Implements "Bounce Keys" filter that ignores rapid repeated key presses within a configurable time window. Prevents accidental double-presses from tremors or bouncing contacts.
+
+**Missing Functionality**:
+
+1. **Key Debouncing**:
+```java
+public class BounceKeysFilter {
+    private long bounceDelay = 500;  // ms
+    private Map<KeyValue, Long> lastKeyPressTimes;
+    
+    public boolean shouldAcceptKeyPress(KeyValue key, long timestamp) {
+        Long lastPress = lastKeyPressTimes.get(key);
+        if (lastPress != null) {
+            long timeSinceLastPress = timestamp - lastPress;
+            if (timeSinceLastPress < bounceDelay) {
+                // Reject - too soon after last press
+                playRejectionSound();
+                return false;
+            }
+        }
+        lastKeyPressTimes.put(key, timestamp);
+        return true;
+    }
+}
+```
+
+2. **Configurable Delays**:
+   - None: 0ms (disabled)
+   - Short: 250ms
+   - Medium: 500ms
+   - Long: 1000ms
+   - Custom: user-defined
+
+3. **Per-Key Timing**:
+   - Each key has independent timer
+   - Pressing different keys doesn't trigger bounce filter
+   - Only repeated presses of SAME key filtered
+
+4. **Visual Feedback**:
+   - Rejected keys flash red briefly
+   - Status indicator when bounce occurs
+   - Counter showing rejected presses
+
+5. **Audio Feedback**:
+   - Optional rejection beep
+   - Acceptance beep for first press
+   - Volume configurable
+
+6. **Statistics Tracking**:
+   - Count rejected presses per session
+   - Help user tune delay setting
+   - Show which keys bounce most often
+
+**User Impact**: Users with tremors, Parkinson's, or hypersensitive switches experience constant double/triple typing ("hheelllloo" instead of "hello"). Makes keyboard unusable without this filter.
+
+**Bug ID**: #374
+
+**Severity**: **HIGH** (Accessibility - blocks users with tremors/motor control issues)
+
+**Fix Required**:
+Create BounceKeysFilter.kt with per-key timing and configurable thresholds.
+
+**Estimated Effort**: 2-3 weeks
+
+---
+
+## **File 173: MouseKeysEmulator.java** (300-400 lines estimated)
+
+**Category**: Category D - Accessibility Features
+
+**Status**: 💀 **COMPLETELY MISSING**
+
+**Purpose**: Implements "Mouse Keys" feature that allows keyboard to control mouse cursor and clicks. Critical for users who cannot use touchscreen or mouse but can use keyboard.
+
+**Missing Functionality**:
+
+1. **Cursor Movement**:
+```java
+public class MouseKeysEmulator {
+    private float cursorX, cursorY;
+    private float velocity = 10f;  // pixels per frame
+    private float acceleration = 1.5f;
+    
+    public void onDirectionalKey(Direction direction) {
+        switch (direction) {
+            case UP:
+                cursorY -= velocity;
+                break;
+            case DOWN:
+                cursorY += velocity;
+                break;
+            case LEFT:
+                cursorX -= velocity;
+                break;
+            case RIGHT:
+                cursorX += velocity;
+                break;
+            case UP_LEFT:
+                cursorX -= velocity * 0.707f;
+                cursorY -= velocity * 0.707f;
+                break;
+            // ... diagonal movements
+        }
+        
+        // Apply acceleration for held keys
+        if (keyHeldDuration > 500) {
+            velocity *= acceleration;
+        }
+        
+        drawCursorOverlay(cursorX, cursorY);
+    }
+}
+```
+
+2. **Click Emulation**:
+   - Left click: Space bar or designated key
+   - Right click: Enter or designated key
+   - Double-click: Two rapid presses
+   - Click-and-drag: Hold click key + move cursor
+
+3. **Cursor Speed Control**:
+   - Configurable base speed (slow/medium/fast)
+   - Acceleration multiplier for long holds
+   - Precision mode (Shift key for slow movement)
+   - Quick jump mode (Ctrl key for fast movement)
+
+4. **Cursor Overlay**:
+   - Visible cursor indicator on screen
+   - Different colors for normal/click states
+   - Crosshair or arrow design
+   - Size configurable
+
+5. **Key Bindings**:
+   - Numpad layout (8=up, 2=down, 4=left, 6=right, etc.)
+   - Arrow keys layout
+   - WASD gaming layout
+   - Custom key bindings
+
+6. **Click Modes**:
+   - Single-click mode (default)
+   - Drag mode (continuous click while moving)
+   - Right-drag mode (context menu drag)
+   - Scroll mode (up/down = scroll wheel)
+
+7. **Edge Behavior**:
+   - Wrap-around at screen edges
+   - Stop at edges
+   - Bounce at edges
+
+**User Impact**: Users who cannot use touchscreen (severe motor disabilities, quadriplegia with mouth stick, head pointer users) have NO way to interact with keyboard UI elements (emoji picker, settings, layout switching). Completely blocks accessibility.
+
+**Bug ID**: #375
+
+**Severity**: **CATASTROPHIC** (Accessibility - blocks pointer-based interaction for severely disabled users)
+
+**Fix Required**:
+Create MouseKeysEmulator.kt with full cursor control and overlay rendering.
+
+**Estimated Effort**: 4-5 weeks
+
+---
+
